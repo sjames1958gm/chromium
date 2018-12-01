@@ -1,0 +1,39 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+config("nzos_config") {
+  include_dirs = [
+    "include",
+  ]
+  lib_dirs = [ 
+    "lib",
+  ]
+}
+
+source_set("nzos") {
+  sources = [
+    "include/NzApe.h",
+    "include/QzMouse.h",
+    "include/QzDefines.h",
+    "include/QzKeys.h",
+  ]
+
+  public_configs = [ ":nzos_config" ]
+
+  include_dirs = [ "include" ]
+  
+}
+
+source_set("nzos_media") {
+  sources = [
+    "media/nzos_video_decoder.cc",
+    "media/nzos_video_decoder.h",
+    "media/nzos_video_decoder_cb.h",
+  ]
+
+  public_deps = [
+    "//base",
+    "//skia",
+  ]  
+}

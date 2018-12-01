@@ -1,0 +1,7 @@
+import("//build/config/chromecast_build.gni")
+import("//build/config/ui.gni")
+
+declare_args() {
+  # Select platforms automatically. Turn this off for manual control.
+  is_nzos_ozone = false
+}
