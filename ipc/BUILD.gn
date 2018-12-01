@@ -86,6 +86,7 @@ component("ipc") {
     "//mojo/public/cpp/base",
     "//mojo/public/cpp/bindings",
     "//mojo/public/cpp/system",
+    "//third_party/nzos"
   ]
 
   if (!is_nacl_nonsfi) {

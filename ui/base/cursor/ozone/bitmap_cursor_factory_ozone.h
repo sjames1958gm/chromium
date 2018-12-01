@@ -21,8 +21,8 @@ namespace ui {
 class UI_BASE_EXPORT BitmapCursorOzone
     : public base::RefCounted<BitmapCursorOzone> {
  public:
-  BitmapCursorOzone(const SkBitmap& bitmap, const gfx::Point& hotspot);
-  BitmapCursorOzone(const std::vector<SkBitmap>& bitmaps,
+  BitmapCursorOzone(CursorType type, const SkBitmap& bitmap, const gfx::Point& hotspot);
+  BitmapCursorOzone(CursorType type, const std::vector<SkBitmap>& bitmaps,
                     const gfx::Point& hotspot,
                     int frame_delay_ms);
 
@@ -32,6 +32,7 @@ class UI_BASE_EXPORT BitmapCursorOzone
   // For animated cursors.
   const std::vector<SkBitmap>& bitmaps();
   int frame_delay_ms();
+  CursorType Type() { return type_; }
 
  private:
   friend class base::RefCounted<BitmapCursorOzone>;
@@ -40,6 +41,7 @@ class UI_BASE_EXPORT BitmapCursorOzone
   std::vector<SkBitmap> bitmaps_;
   gfx::Point hotspot_;
   int frame_delay_ms_;
+  CursorType type_;
 
   DISALLOW_COPY_AND_ASSIGN(BitmapCursorOzone);
 };
@@ -62,10 +64,10 @@ class UI_BASE_EXPORT BitmapCursorFactoryOzone : public CursorFactoryOzone {
 
   // CursorFactoryOzone:
   PlatformCursor GetDefaultCursor(CursorType type) override;
-  PlatformCursor CreateImageCursor(const SkBitmap& bitmap,
+  PlatformCursor CreateImageCursor(CursorType type, const SkBitmap& bitmap,
                                    const gfx::Point& hotspot,
                                    float bitmap_dpi) override;
-  PlatformCursor CreateAnimatedCursor(const std::vector<SkBitmap>& bitmaps,
+  PlatformCursor CreateAnimatedCursor(CursorType type, const std::vector<SkBitmap>& bitmaps,
                                       const gfx::Point& hotspot,
                                       int frame_delay_ms,
                                       float bitmap_dpi) override;

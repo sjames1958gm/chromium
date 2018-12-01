@@ -34,7 +34,8 @@ class OZONE_BASE_EXPORT CursorFactoryOzone {
   // Return a image cursor from the specified image & hotspot. Image cursors
   // are referenced counted and have an initial refcount of 1. Therefore, each
   // CreateImageCursor call must be matched with a call to UnrefImageCursor.
-  virtual PlatformCursor CreateImageCursor(const SkBitmap& bitmap,
+  virtual PlatformCursor CreateImageCursor(CursorType type,
+                                           const SkBitmap& bitmap,
                                            const gfx::Point& hotspot,
                                            float bitmap_dpi);
 
@@ -43,6 +44,7 @@ class OZONE_BASE_EXPORT CursorFactoryOzone {
   // Therefore, each CreateAnimatedCursor call must be matched with a call to
   // UnrefImageCursor.
   virtual PlatformCursor CreateAnimatedCursor(
+      CursorType type,
       const std::vector<SkBitmap>& bitmaps,
       const gfx::Point& hotspot,
       int frame_delay_ms,

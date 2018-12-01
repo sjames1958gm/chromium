@@ -118,4 +118,7 @@ const char kEnableCrashReporterForTesting[] =
 const char kOrderfileMemoryOptimization[] = "orderfile-memory-optimization";
 #endif
 
+const char kNzCaptureLog[]      = "nz-capture-log";
+const char kNzInhibitVisibleAck[] = "nz-inhibit-visible-ack";
+
 }  // namespace switches

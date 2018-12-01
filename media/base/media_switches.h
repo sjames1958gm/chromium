@@ -91,6 +91,19 @@ MEDIA_EXPORT extern const char kUserGestureRequiredForCrossOriginPolicy[];
 
 }  // namespace autoplay
 
+MEDIA_EXPORT extern const char kEnableNZDecoding[];
+MEDIA_EXPORT extern const char kDisableNZAudioDecoding[];
+MEDIA_EXPORT extern const char kEnableNZDecrypting[];
+MEDIA_EXPORT extern const char kDumpNzDecoding[];
+MEDIA_EXPORT extern const char kEnableNZBWControl[];
+
+MEDIA_EXPORT extern const char kNzPermitVpCodecs[];
+MEDIA_EXPORT extern const char kNzAdjustRate[];
+MEDIA_EXPORT extern const char kNzVideoQueueSize[];
+MEDIA_EXPORT extern const char kNzAudioQueueSize[];
+MEDIA_EXPORT extern const char kNzMaxVideoQueueSize[];
+MEDIA_EXPORT extern const char kNzMaxAudioQueueSize[];
+
 }  // namespace switches
 
 namespace media {

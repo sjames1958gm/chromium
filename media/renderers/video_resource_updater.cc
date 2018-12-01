@@ -47,6 +47,8 @@
 #include "ui/gl/gl_enums.h"
 #include "ui/gl/trace_util.h"
 
+#include "components/viz/common/quads/solid_color_draw_quad.h"
+
 namespace media {
 namespace {
 
@@ -531,6 +533,22 @@ void VideoResourceUpdater::AppendQuads(viz::RenderPass* render_pass,
       }
       break;
     }
+    case VideoFrameResourceType::HOLE: {
+    // TODOSJ
+
+      viz::SolidColorDrawQuad* solid_color_draw_quad =
+          render_pass->CreateAndAppendDrawQuad<viz::SolidColorDrawQuad>();
+      // Create a solid color quad with transparent black and force no
+      // blending / no anti-aliasing.
+      gfx::Rect opaque_rect = quad_rect;
+      solid_color_draw_quad->SetAll(shared_quad_state,
+                                    quad_rect,
+                                    opaque_rect,
+                                    false,
+                                    SK_ColorTRANSPARENT,
+                                    true);
+    }
+    break;
     case VideoFrameResourceType::NONE:
       NOTIMPLEMENTED();
       break;
@@ -540,7 +558,8 @@ void VideoResourceUpdater::AppendQuads(viz::RenderPass* render_pass,
 VideoFrameExternalResources
 VideoResourceUpdater::CreateExternalResourcesFromVideoFrame(
     scoped_refptr<VideoFrame> video_frame) {
-  if (video_frame->format() == PIXEL_FORMAT_UNKNOWN)
+  if ((video_frame->format() == PIXEL_FORMAT_UNKNOWN)  &&
+      (video_frame->storage_type() != media::VideoFrame::STORAGE_HOLE)) 
     return VideoFrameExternalResources();
   DCHECK(video_frame->HasTextures() || video_frame->IsMappable());
   if (video_frame->HasTextures())
@@ -755,6 +774,12 @@ VideoFrameExternalResources VideoResourceUpdater::CreateForSoftwarePlanes(
     scoped_refptr<VideoFrame> video_frame) {
   TRACE_EVENT0("cc", "VideoResourceUpdater::CreateForSoftwarePlanes");
   const VideoPixelFormat input_frame_format = video_frame->format();
+  
+  if (video_frame->storage_type() == media::VideoFrame::STORAGE_HOLE) {
+    VideoFrameExternalResources external_resources;
+    external_resources.type = VideoFrameResourceType::HOLE;
+    return external_resources;
+  }
 
   size_t bits_per_channel = video_frame->BitDepth();
 

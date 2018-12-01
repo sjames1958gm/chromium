@@ -61,7 +61,8 @@ class MEDIA_EXPORT DecryptConfig {
                 const std::string& key_id,
                 const std::string& iv,
                 const std::vector<SubsampleEntry>& subsamples,
-                base::Optional<EncryptionPattern> encryption_pattern);
+                base::Optional<EncryptionPattern> encryption_pattern,
+                uint32_t session_id = 0);
   ~DecryptConfig();
 
   const std::string& key_id() const { return key_id_; }
@@ -71,6 +72,7 @@ class MEDIA_EXPORT DecryptConfig {
   const base::Optional<EncryptionPattern>& encryption_pattern() const {
     return encryption_pattern_;
   };
+  uint32_t SessionId() const { return session_id_; }
 
   std::unique_ptr<DecryptConfig> Clone() const;
 
@@ -99,6 +101,8 @@ class MEDIA_EXPORT DecryptConfig {
   // Only specified if |encryption_mode_| requires a pattern.
   base::Optional<EncryptionPattern> encryption_pattern_;
 
+  uint32_t session_id_;
+  
   DISALLOW_ASSIGN(DecryptConfig);
 };
 

@@ -65,10 +65,10 @@ class UI_BASE_EXPORT CursorDataFactoryOzone : public CursorFactoryOzone {
 
   // CursorFactoryOzone:
   PlatformCursor GetDefaultCursor(CursorType type) override;
-  PlatformCursor CreateImageCursor(const SkBitmap& bitmap,
+  PlatformCursor CreateImageCursor(CursorType type, const SkBitmap& bitmap,
                                    const gfx::Point& hotspot,
                                    float bitmap_dpi) override;
-  PlatformCursor CreateAnimatedCursor(const std::vector<SkBitmap>& bitmaps,
+  PlatformCursor CreateAnimatedCursor(CursorType type, const std::vector<SkBitmap>& bitmaps,
                                       const gfx::Point& hotspot,
                                       int frame_delay_ms,
                                       float bitmap_dpi) override;

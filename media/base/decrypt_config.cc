@@ -55,12 +55,14 @@ DecryptConfig::DecryptConfig(
     const std::string& key_id,
     const std::string& iv,
     const std::vector<SubsampleEntry>& subsamples,
-    base::Optional<EncryptionPattern> encryption_pattern)
+    base::Optional<EncryptionPattern> encryption_pattern,
+    uint32_t session_id)
     : encryption_mode_(encryption_mode),
       key_id_(key_id),
       iv_(iv),
       subsamples_(subsamples),
-      encryption_pattern_(std::move(encryption_pattern)) {
+      encryption_pattern_(std::move(encryption_pattern)),
+      session_id_(session_id) {
   // Unencrypted blocks should not have a DecryptConfig.
   DCHECK_NE(encryption_mode_, EncryptionMode::kUnencrypted);
   CHECK_GT(key_id_.size(), 0u);

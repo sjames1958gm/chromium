@@ -36,7 +36,7 @@ ui::PlatformCursor WebCursor::GetPlatformCursor() {
                                             &hotspot);
 
   platform_cursor_ = ui::CursorFactoryOzone::GetInstance()->CreateImageCursor(
-      bitmap, hotspot, scale);
+    static_cast<ui::CursorType>(type_), bitmap, hotspot, scale);
   return platform_cursor_;
 }
 

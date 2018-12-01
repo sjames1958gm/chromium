@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <ostream>
+#include <sstream>
 
 #include "base/files/file_path.h"
 #include "base/logging.h"
@@ -252,9 +253,68 @@ CommandLine CommandLine::FromString(const string16& command_line) {
 
 void CommandLine::InitFromArgv(int argc,
                                const CommandLine::CharType* const* argv) {
+  // The chrome specific command line parameters are received within quotes marked with --chromeparms="...". Need to massage the
+  // command line parms to convert the incomming command line (that might look like this)
+  //
+  // bin/nzchromium --chromeparms="--ozone-platform=nzos --disable-gpu-sandbox --kiosk http://www.youtube.com/tv" -port 5000 -console 5001
+  //
+  // to something that chrome with understand (like this)
+  //
+  // bin/nzchromium --ozone-platform=nzos --disable-gpu-sandbox --kiosk http://www.youtube.com/tv --nzparms="-port 5000 -console 5001"
   StringVector new_argv;
-  for (int i = 0; i < argc; ++i)
-    new_argv.push_back(argv[i]);
+  StringVector chrome_parms;
+  StringVector nzos_parms;
+  StringVector other_parms;
+  StringType maybe_nz_parms;
+
+  if (argc > 0) {
+    // Special handling for program name
+    new_argv.push_back(argv[0]);
+    original_argv_.push_back(argv[0]);
+
+    for (int i = 1; i < argc; ++i) {
+      if (strncmp(argv[i], "--chromeparms=", 14) == 0) {
+        StringType chromeparm = argv[i];
+        std::stringstream ss(chromeparm.substr(14));
+        while (getline(ss, chromeparm, ' ')) { // seperate the chromeparms using whitespace
+          if (!chromeparm.empty())
+            chrome_parms.push_back(chromeparm);
+        }
+      } else if (strncmp(argv[i], "--nzparms=", 10) == 0) {
+        StringType nzparm = argv[i];
+        nz_parms_ = nzparm.substr(10);
+        std::stringstream ss(nz_parms_);
+        while (getline(ss, nzparm, ' ')) { // seperate the nzparms using whitespace
+          if (!nzparm.empty())
+            nzos_parms.push_back(nzparm);
+        }
+      } else {
+        maybe_nz_parms += ' ';
+        maybe_nz_parms += argv[i];
+        other_parms.push_back(argv[i]);
+      }
+    }
+
+    if (chrome_parms.size() > 0) {
+      new_argv.insert(new_argv.end(), chrome_parms.begin(), chrome_parms.end());
+      original_argv_.insert(original_argv_.end(), chrome_parms.begin(), chrome_parms.end());
+
+      // We have found some chrome parms, check to see if we have any nzos parms
+      if (!nz_parms_.empty()) {
+        // All the other parms are then chrome parms
+        new_argv.insert(new_argv.end(), other_parms.begin(), other_parms.end());
+      } else {
+        // All the other parms are then nzos parms
+        nz_parms_ += maybe_nz_parms;
+      }
+    } else {
+      // We did not find any chrome specific parms, indicates everything was a chrome parm
+      new_argv.insert(new_argv.end(), other_parms.begin(), other_parms.end());
+    }
+    original_argv_.insert(original_argv_.end(), other_parms.begin(), other_parms.end());
+    original_argv_.insert(original_argv_.end(), nzos_parms.begin(), nzos_parms.end());
+  }
+
   InitFromArgv(new_argv);
 }
 

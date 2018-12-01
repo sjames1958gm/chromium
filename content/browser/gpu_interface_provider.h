@@ -22,7 +22,7 @@ class CONTENT_EXPORT GpuInterfaceProvider : public ws::GpuInterfaceProvider {
   // ws::GpuInterfaceProvider:
   void RegisterGpuInterfaces(
       service_manager::BinderRegistry* registry) override;
-#if defined(USE_OZONE)
+#if defined(USE_OZONE)  && defined(DUMMY)
   void RegisterOzoneGpuInterfaces(
       service_manager::BinderRegistry* registry) override;
 #endif

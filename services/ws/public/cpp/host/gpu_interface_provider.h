@@ -22,7 +22,7 @@ class GpuInterfaceProvider {
   virtual void RegisterGpuInterfaces(
       service_manager::BinderRegistry* registry) = 0;
 
-#if defined(USE_OZONE)
+#if defined(USE_OZONE) && defined(DUMMY)
   // Registers the gpu-related interfaces needed by Ozone.
   virtual void RegisterOzoneGpuInterfaces(
       service_manager::BinderRegistry* registry) = 0;

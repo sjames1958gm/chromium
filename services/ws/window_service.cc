@@ -229,7 +229,7 @@ void WindowService::OnStart() {
   if (gpu_interface_provider_) {
     gpu_interface_provider_->RegisterGpuInterfaces(&registry_);
 
-#if defined(USE_OZONE)
+#if defined(USE_OZONE)  && defined(DUMMY)
     gpu_interface_provider_->RegisterOzoneGpuInterfaces(&registry_);
 #endif
   }

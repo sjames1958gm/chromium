@@ -150,6 +150,12 @@ class BASE_EXPORT CommandLine {
   // Returns the original command line string as a vector of strings.
   const StringVector& argv() const { return argv_; }
 
+  // Returns the original UNTOUCHED command line string as a vector of strings.
+  const StringVector& original_argv() const { return original_argv_; }
+
+  // Returns the nz parms that were passed in
+  const StringType& nz_parms() const { return nz_parms_; }
+
   // Get and Set the program part of the command line string (the first item).
   FilePath GetProgram() const;
   void SetProgram(const FilePath& program);
@@ -240,6 +246,13 @@ class BASE_EXPORT CommandLine {
 
   // The index after the program and switches, any arguments start here.
   size_t begin_args_;
+
+  // The original argv
+  StringVector original_argv_;
+
+  // NzParms, in case we need to pass them to the GPU process
+  StringType nz_parms_;
+
 };
 
 }  // namespace base

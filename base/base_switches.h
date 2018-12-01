@@ -46,6 +46,9 @@ extern const char kEnableCrashReporterForTesting[];
 extern const char kOrderfileMemoryOptimization[];
 #endif
 
+extern const char kNzCaptureLog[];
+extern const char kNzInhibitVisibleAck[];
+
 }  // namespace switches
 
 #endif  // BASE_BASE_SWITCHES_H_

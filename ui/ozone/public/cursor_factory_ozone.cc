@@ -42,7 +42,8 @@ PlatformCursor CursorFactoryOzone::GetDefaultCursor(CursorType type) {
   return NULL;
 }
 
-PlatformCursor CursorFactoryOzone::CreateImageCursor(const SkBitmap& bitmap,
+PlatformCursor CursorFactoryOzone::CreateImageCursor(CursorType type,
+                                                     const SkBitmap& bitmap,
                                                      const gfx::Point& hotspot,
                                                      float bitmap_dpi) {
   NOTIMPLEMENTED();
@@ -50,6 +51,7 @@ PlatformCursor CursorFactoryOzone::CreateImageCursor(const SkBitmap& bitmap,
 }
 
 PlatformCursor CursorFactoryOzone::CreateAnimatedCursor(
+    CursorType type,
     const std::vector<SkBitmap>& bitmaps,
     const gfx::Point& hotspot,
     int frame_delay_ms,
