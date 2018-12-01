@@ -1,0 +1,12 @@
+# Build arguments go here.
+# See "gn args <out_dir> --list" for available build arguments.
+#
+use_ozone = true
+target_os = "chromeos"
+media_use_ffmpeg = true
+media_use_libvpx = true
+proprietary_codecs = true
+ffmpeg_branding = "Chrome"
+is_component_build = false
+is_debug=false
+is_nzos_ozone=true
