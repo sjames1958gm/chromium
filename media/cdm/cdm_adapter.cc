@@ -974,6 +974,10 @@ cdm::CdmProxy* CdmAdapter::RequestCdmProxy(cdm::CdmProxyClient* client) {
   return helper_->CreateCdmProxy(client);
 }
 
+int CdmAdapter::GetDrmScheme() {
+  return 0;
+}
+
 void CdmAdapter::OnStorageIdObtained(uint32_t version,
                                      const std::vector<uint8_t>& storage_id) {
   cdm_->OnStorageId(version, storage_id.data(), storage_id.size());

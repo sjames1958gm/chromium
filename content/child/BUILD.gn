@@ -134,6 +134,7 @@ target(link_target_type, "child") {
     "//ui/native_theme",
     "//url",
     "//v8",
+    "//third_party/nzos:nzos_child",
   ]
 
   if (!use_default_render_theme) {

@@ -72,6 +72,8 @@
 #include "services/service_manager/runner/common/client_util.h"
 #include "services/service_manager/sandbox/sandbox_type.h"
 
+#include "third_party/nzos/content/child/nzos_video_proxy_dispatcher.h"
+
 #if defined(OS_POSIX)
 #include "base/posix/global_descriptors.h"
 #include "content/public/common/content_descriptors.h"
@@ -459,6 +461,9 @@ void ChildThreadImpl::Init(const Options& options) {
   GetServiceManagerConnection()->AddConnectionFilter(
       std::make_unique<SimpleConnectionFilter>(std::move(registry)));
 
+  nz_video_proxy_dispatcher_ =
+    new NzVideoProxyDispatcher(GetIOTaskRunner(), this);
+
   InitTracing();
 
   // In single process mode, browser-side tracing and memory will cover the
@@ -722,6 +727,9 @@ std::unique_ptr<base::SharedMemory> ChildThreadImpl::AllocateSharedMemory(
 bool ChildThreadImpl::OnMessageReceived(const IPC::Message& msg) {
   if (msg.routing_id() == MSG_ROUTING_CONTROL)
     return OnControlMessageReceived(msg);
+
+  if (nz_video_proxy_dispatcher_->OnMessageReceived(msg))
+    return true;
 
   return router_.OnMessageReceived(msg);
 }

@@ -35,8 +35,7 @@ class DecoderBuffer;
 class MEDIA_EXPORT NZVideoDecoder : public VideoDecoder {
  public:
   explicit NZVideoDecoder(
-      const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
-      NzosMediaProxyInterface* proxyInterface);
+      const scoped_refptr<base::SingleThreadTaskRunner>& task_runner);
   ~NZVideoDecoder() override;
 
   static void OnDestructS(int routing_id);

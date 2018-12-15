@@ -44,7 +44,7 @@
 #include "third_party/nzos/include/QzMouse.h"
 #include "third_party/nzos/include/QzKeys.h"
 #include "third_party/nzos/include/NzApe.h"
-// #include "nzos/video_proxy/nz_video_proxy_message_filter.h"
+// #include "third_party/nzos/content/browser/video_proxy/nz_video_proxy_message_filter.h"
 // #include "nzos/video_capture/video_capture_device_nzos.h"
 
 uint32_t g_Width       = 0;
@@ -168,7 +168,6 @@ bool NzosPlatformThread::sIsMobileDevice = false;
 
 NzosPlatformThread::NzosPlatformThread() : Thread("NzosPlatformThread"), state_(NzosPlatformState::Startup),
     app_has_focus_(false), weak_factory_(this) {
-  locationProvider_ = nullptr;
 }
 
 NzosPlatformThread::~NzosPlatformThread() { 
@@ -264,7 +263,7 @@ void NzosPlatformThread::EventDevicePropertiesEx(void* pNzDevice) {
 
   sDeviceSw = software;
 
-  // content::NzVideoProxyMessageFilter::OnDevicePropertiesReceivedS(pNzDevice);
+  if (Instance()->platformInterface_) Instance()->platformInterface_->OnDevicePropertiesReceived(pNzDevice);
 }
 
 void NzosPlatformThread::EventKeyboard(uint32_t Op, uint32_t u32Flags, uint32_t Key) {
@@ -283,8 +282,7 @@ void NzosPlatformThread::EventJoystick(uint32_t u32JoystickId, uint32_t u32AxisC
 }
 
 void NzosPlatformThread::EventDRMKeyRequest(uint32_t u32SessionId, uint32_t u32KeyRqstId, const uint8_t* pOpaqueData, uint32_t u32OpaqueDataLen, const char* pUrl, uint32_t u32UrlLen) {
-  // TODOSJ
-  // content::NzVideoProxyMessageFilter::OnKeyMessageReceivedS(u32SessionId, u32KeyRqstId, pOpaqueData, u32OpaqueDataLen, pUrl, u32UrlLen);
+  if (Instance()->platformInterface_) Instance()->platformInterface_->OnKeyMessageReceived(u32SessionId, u32KeyRqstId, pOpaqueData, u32OpaqueDataLen, pUrl, u32UrlLen);
 }
 
 void NzosPlatformThread::EventMouse(uint32_t Op, uint32_t u32Flags, uint32_t X, uint32_t Y) {
@@ -592,8 +590,6 @@ void NzosPlatformThread::NzosInit() {
     }
   }
 
-  // TODOSJ
-  // content::NzVideoProxyMessageFilter::StaticInitialization();
   NzosPlatformThread::Instance()->SetState(NzosPlatformState::Initialized);
 }
 

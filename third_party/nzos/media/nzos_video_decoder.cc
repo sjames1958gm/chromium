@@ -73,8 +73,7 @@ bool NZVideoDecoder::IsEnabled() {
 }
 
 NZVideoDecoder::NZVideoDecoder(
-    const scoped_refptr<base::SingleThreadTaskRunner>& task_runner,
-    NzosMediaProxyInterface* proxyInterface) :
+    const scoped_refptr<base::SingleThreadTaskRunner>& task_runner) :
       task_runner_(task_runner),
       nzosMediaProxyInterface_(proxyInterface),
       extra_data_parsed_(false),
@@ -105,17 +104,15 @@ NZVideoDecoder::NZVideoDecoder(
 
 // static
 void NZVideoDecoder::SetProxyInterface(NzosMediaProxyInterface* inst) {
+  LOG(ERROR) << "SetProxyInterface";
   proxyInterface = inst;
 }
 
 // Static
 NZVideoDecoder* NZVideoDecoder::Create(
     const scoped_refptr<base::SingleThreadTaskRunner>& task_runner) {
-  if (proxyInterface) {
-    return new NZVideoDecoder(task_runner, proxyInterface);
-  } else {
-    return nullptr;
-  }
+// Not used
+return nullptr;
 }
 
 // The following three are no longer called - need to understand how they can

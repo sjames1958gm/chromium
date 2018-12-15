@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONTENT_RENDERER_NZ_VIDEO_PROXY_NZ_VIDEO_PROXY_DISPATCHER_H_
-#define CONTENT_RENDERER_NZ_VIDEO_PROXY_NZ_VIDEO_PROXY_DISPATCHER_H_
+#ifndef CONTENT_CHILD_NZ_VIDEO_PROXY_NZ_VIDEO_PROXY_DISPATCHER_H_
+#define CONTENT_CHILD_NZ_VIDEO_PROXY_NZ_VIDEO_PROXY_DISPATCHER_H_
 
 #include <list>
 #include <map>
-#include "base/memory/scoped_ptr.h"
+#include "base/memory/scoped_refptr.h"
 #include "base/time/time.h"
 #include "base/timer/timer.h"
 #include "content/common/content_export.h"
 #include "ipc/message_filter.h"
-#include "nzos/video_proxy/nz_video_proxy_messages.h"
+#include "third_party/nzos/media/nzos_media_proxy_interface.h"
 
 #define NZ_BUFFER_MEDIA 1
 
@@ -24,13 +24,13 @@ namespace content {
 
 class NzMsgDelay {
 public:
-    NzMsgDelay(int request_id, base::Time last_time, IPC::Message* msg, uint64 bits);
+    NzMsgDelay(int request_id, base::Time last_time, IPC::Message* msg, uint64_t bits);
     ~NzMsgDelay() {}
         int request_id_;
     base::Time insert_time_;
     base::Time last_time_;
     IPC::Message* msg_;
-    uint64 bits_;
+    uint64_t bits_;
 };
 
 class NzBwData {
@@ -45,39 +45,39 @@ public:
 
 class ResourceDispatcher;
 
-class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter {
+class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter, media::NzosMediaProxyInterface {
  public:
   explicit NzVideoProxyDispatcher(
-	  base::SingleThreadTaskRunner* ipc_task_runner,
-      ResourceDispatcher* resource_dispatcher,
+	  const scoped_refptr<base::SingleThreadTaskRunner>& ipc_task_runner,
+      // ResourceDispatcher* resource_dispatcher,
       IPC::Sender* sender);
 
   static NzVideoProxyDispatcher* Instance() { return s_Instance; };
 
-  int RenderId() { return render_id_; }
+  int RenderId() override;
 
-  virtual void Create(const Nz_Proxy_Create& create_data);
-  virtual void Start(const Nz_Proxy_Initial_Data& init_data);
-  virtual void Update(const Nz_Proxy_Initial_Data& init_data);
-  virtual void BoundingRect(const Nz_Proxy_Bounding_Rect& bounding_rect);
-  virtual void Play(int id, double duration);
-  virtual void Pause(const Nz_Proxy_Id& id_data);
-  virtual void Reset(const Nz_Proxy_Id& id_data);
-  virtual void Stop(const Nz_Proxy_Id& id_data);
-  virtual void Destroy(const Nz_Proxy_Id& id_data);
-  virtual void Remove(const Nz_Proxy_Id& id_data);
-  virtual void Restore(const Nz_Proxy_Id& id_data);
-  virtual void Buffer(const Nz_Proxy_Media_Buffer& buffer);
-  virtual void Hidden(const Nz_Proxy_Id& id_data);
-  virtual void Shown(const Nz_Proxy_Id& id_data);
-  virtual void Seek(const Nz_Proxy_Seek& seek_data);
+  void Create(const Nz_Proxy_Create& create_data) override;
+  void Start(const Nz_Proxy_Initial_Data& init_data) override;
+  void Update(const Nz_Proxy_Initial_Data& init_data) override; 
+  void BoundingRect(const Nz_Proxy_Bounding_Rect& bounding_rect) override;
+  void Play(int id, double duration) override;
+  void Pause(const Nz_Proxy_Id& id_data) override;
+  void Reset(const Nz_Proxy_Id& id_data) override;
+  void Stop(const Nz_Proxy_Id& id_data) override;
+  void Destroy(const Nz_Proxy_Id& id_data) override;
+  void Remove(const Nz_Proxy_Id& id_data) override;
+  void Restore(const Nz_Proxy_Id& id_data) override;
+  void Buffer(const Nz_Proxy_Media_Buffer& buffer) override;
+  void Hidden(const Nz_Proxy_Id& id_data) override;
+  void Shown(const Nz_Proxy_Id& id_data) override;
+  void Seek(const Nz_Proxy_Seek& seek_data) override;
 
   virtual void ScrollVector(const int X, const int Y);
 
   bool CapabilitiesRcvd() { return capabilities_rcvd_; }
-  bool H264Capable() { return h264_capable_; }
-  bool Vp8Capable() { return vp8_capable_; }
-  bool Vp9Capable() { return vp9_capable_; }
+  bool H264Capable() override;
+  bool Vp8Capable() override;
+  bool Vp9Capable() override;
   bool ClearkeyCapable() { return clearkey_capable_; }
   bool NzEncryptionCapable() { return nz_encrypt_capable_; }
   bool WidevineCapable() { return widevine_capable_; }
@@ -100,7 +100,7 @@ class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter {
   void Send(IPC::Message* message);
 
   // IPC::MessageFilter override. Called on |io_message_loop|.
-  void OnFilterAdded(IPC::Sender* sender) override;
+  void OnFilterAdded(IPC::Channel* sender) override;
   void OnFilterRemoved() override;
   void OnChannelClosing() override; // IPC channel for Send(); must only be accessed on |io_message_loop_|.
 
@@ -162,14 +162,14 @@ private:
 
   virtual void OnDeviceProperties(bool allowUserAgentChange, bool isMobileDevice, std::string deviceSw);
 
-  double calcDelay(int64 bits);
+  double calcDelay(int64_t bits);
 
   IPC::Sender* sender_;
 
   // Message loop on which IPC calls are driven.
-  base::SingleThreadTaskRunner* ipc_task_runner_;
+  const scoped_refptr<base::SingleThreadTaskRunner>& ipc_task_runner_;
 
-  ResourceDispatcher* resource_dispatcher_;
+  // ResourceDispatcher* resource_dispatcher_;
 
   bool capabilities_rcvd_;
   bool h264_capable_;
@@ -180,7 +180,7 @@ private:
   bool widevine_capable_;
   int render_id_;
   int active_nz_decoders_;
-  scoped_ptr<base::OneShotTimer<NzVideoProxyDispatcher> > timer_;
+  base::OneShotTimer timer_;
   double target_bw_;
   double current_bw_;
   bool reset_bw_calc_;

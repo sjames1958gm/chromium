@@ -14,20 +14,20 @@ namespace media {
     virtual bool H264Capable();
     virtual bool Vp8Capable();
     virtual bool Vp9Capable();
-    virtual void Start(Nz_Proxy_Initial_Data&) = 0;
-    virtual void Update(Nz_Proxy_Initial_Data&) = 0;
-    virtual void Reset(Nz_Proxy_Id&) = 0;
+    virtual void Start(const Nz_Proxy_Initial_Data&) = 0;
+    virtual void Update(const Nz_Proxy_Initial_Data&) = 0;
+    virtual void Reset(const Nz_Proxy_Id&) = 0;
     virtual void Play(int, double) = 0; 
-    virtual void Pause(Nz_Proxy_Id&) = 0;
-    virtual void Stop(Nz_Proxy_Id&) = 0;
-    virtual void Destroy(Nz_Proxy_Id&) = 0;
-    virtual void Buffer(Nz_Proxy_Media_Buffer&) = 0;
-    virtual void Seek(Nz_Proxy_Seek&) = 0;
-    virtual void Hidden(Nz_Proxy_Id&) = 0;
-    virtual void Shown(Nz_Proxy_Id&) = 0;
-    virtual void BoundingRect(Nz_Proxy_Bounding_Rect&) = 0;
-    virtual void Remove(Nz_Proxy_Id&) = 0;
-    virtual void Restore(Nz_Proxy_Id&) = 0;
+    virtual void Pause(const Nz_Proxy_Id&) = 0;
+    virtual void Stop(const Nz_Proxy_Id&) = 0;
+    virtual void Destroy(const Nz_Proxy_Id&) = 0;
+    virtual void Buffer(const Nz_Proxy_Media_Buffer&) = 0;
+    virtual void Seek(const Nz_Proxy_Seek&) = 0;
+    virtual void Hidden(const Nz_Proxy_Id&) = 0;
+    virtual void Shown(const Nz_Proxy_Id&) = 0;
+    virtual void BoundingRect(const Nz_Proxy_Bounding_Rect&) = 0;
+    virtual void Remove(const Nz_Proxy_Id&) = 0;
+    virtual void Restore(const Nz_Proxy_Id&) = 0;
 
   };
 

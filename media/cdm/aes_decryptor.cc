@@ -553,6 +553,10 @@ void AesDecryptor::DeinitializeDecoder(StreamType stream_type) {
   // nothing to be done here.
 }
 
+int AesDecryptor::GetDrmScheme() {
+  return 0;
+}
+
 bool AesDecryptor::CreateSession(const std::string& session_id,
                                  CdmSessionType session_type) {
   auto it = open_sessions_.find(session_id);

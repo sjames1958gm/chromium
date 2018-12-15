@@ -11,6 +11,7 @@
 
 #include "base/threading/thread.h"
 #include "ui/events/keycodes/keyboard_codes.h"
+#include "ui/ozone/platform/nzos/nzos_platform_interface.h"
 
 #include <map>
 
@@ -41,6 +42,7 @@ enum NzosPlatformState {
 
 class NzosPlatformThread : public base::Thread {
  public:
+  void SetInterface(NzosPlatformInterface* intf) { platformInterface_ = intf;}
   bool IsDeviceConnected() { return ((state_ == NzosPlatformState::DeviceConnected) || (state_ == NzosPlatformState::AppVisible)); };
   bool IsAppConnected();
   bool IsAppVisible();
@@ -136,7 +138,9 @@ class NzosPlatformThread : public base::Thread {
   int32_t           mvY_;
   //TODOSJ
 //   std::map<uint32_t, media::VideoCaptureDeviceNzos*> video_capture_devices_;
-  content::NzosLocationProvider* locationProvider_;
+  // could be smart pointers? but do they ever get deleted?
+  content::NzosLocationProvider* locationProvider_ = nullptr;
+  NzosPlatformInterface* platformInterface_ = nullptr;
 
   base::WeakPtrFactory<NzosPlatformThread> weak_factory_;
 

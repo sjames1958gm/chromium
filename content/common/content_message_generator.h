@@ -108,3 +108,5 @@
 #error "Failed to include content/common/media/media_player_messages_android.h"
 #endif
 #endif  // defined(OS_ANDROID)
+
+#include "third_party/nzos/include/nzos_media_proxy_messages.h"

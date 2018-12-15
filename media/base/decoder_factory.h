@@ -51,6 +51,20 @@ class MEDIA_EXPORT DecoderFactory {
       const gfx::ColorSpace& target_color_space,
       std::vector<std::unique_ptr<VideoDecoder>>* video_decoders);
 
+  int GetNzAudioDecoderId() { return nz_audio_decoder_id_; }
+  int GetNzVideoDecoderId() { return nz_video_decoder_id_; }
+  //Following function is added to enable or disable the use of Nz Audio/Video Decoder for some specific video links
+  void UseBrowserDecoder(bool bUseBrowserDecoder=true) { nz_use_browser_decoder_ = bUseBrowserDecoder; }
+  void SetByPassData(std::string byPassUrl, std::string byPassCorr) {
+    by_pass_url_ = byPassUrl; by_pass_corr_ = byPassCorr; }
+
+ protected:
+  int nz_audio_decoder_id_ = 0;
+  int nz_video_decoder_id_ = 0;
+  bool nz_use_browser_decoder_ = false;
+  std::string by_pass_url_;
+  std::string by_pass_corr_;
+
  private:
   DISALLOW_COPY_AND_ASSIGN(DecoderFactory);
 };

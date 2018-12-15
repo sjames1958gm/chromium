@@ -78,6 +78,8 @@
 #include "media/base/android/media_codec_util.h"
 #endif
 
+#include "third_party/nzos/media/nzos_video_decoder.h"
+
 using blink::WebMediaPlayer;
 using blink::WebRect;
 using blink::WebSize;
@@ -271,7 +273,10 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
       create_bridge_callback_(params->create_bridge_callback()),
       request_routing_token_cb_(params->request_routing_token_cb()),
       overlay_routing_token_(OverlayInfo::RoutingToken()),
-      media_metrics_provider_(params->take_metrics_provider()) {
+      media_metrics_provider_(params->take_metrics_provider()),
+      drm_scheme_(0),
+      video_decoder_id_(0),
+      audio_decoder_id_(0)  {
   DVLOG(1) << __func__;
   DCHECK(adjust_allocated_memory_cb_);
   DCHECK(renderer_factory_selector_);
@@ -685,6 +690,18 @@ void WebMediaPlayerImpl::Play() {
 
   media_log_->AddEvent(media_log_->CreateEvent(MediaLogEvent::PLAY));
   UpdatePlayState();
+
+
+  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(video_decoder_id_);
+  if (videoDecoder) {
+    videoDecoder->Play(GetPipelineMediaDuration().InSecondsF());
+  } else {
+    //TODOSJ
+    // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(audio_decoder_id_);
+    // if (audioDecoder) {
+    //   audioDecoder->Play(GetPipelineDuration());
+    // }
+  }
 }
 
 void WebMediaPlayerImpl::Pause() {
@@ -725,6 +742,18 @@ void WebMediaPlayerImpl::Pause() {
   media_log_->AddEvent(media_log_->CreateEvent(MediaLogEvent::PAUSE));
 
   UpdatePlayState();
+
+    media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(video_decoder_id_);
+  if (videoDecoder) {
+    videoDecoder->Pause();
+  } else {
+    //TODOSJ
+    // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(audio_decoder_id_);
+    // if (audioDecoder) {
+    //   audioDecoder->Pause();
+    // }
+  }
+
 }
 
 void WebMediaPlayerImpl::Seek(double seconds) {

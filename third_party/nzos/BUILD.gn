@@ -17,6 +17,7 @@ source_set("nzos") {
     "include/QzMouse.h",
     "include/QzDefines.h",
     "include/QzKeys.h",
+    "include/nzos_media_proxy_messages.h"
   ]
 
   public_configs = [ ":nzos_config" ]
@@ -25,11 +26,50 @@ source_set("nzos") {
   
 }
 
+source_set("nzos_child") {
+  sources = [
+    "content/child/nzos_video_proxy_dispatcher.cc",
+    "content/child/nzos_video_proxy_dispatcher.h",
+
+  ]
+
+  deps = [
+    "//third_party/nzos"
+  ]
+
+  public_deps = [
+    "//base",
+    "//media"
+  ] 
+
+  include_dirs = ["content/child"]
+}
+
+source_set("nzos_browser") {
+  sources = [
+    "content/browser/nzos_video_proxy_message_filter.cc",
+    "content/browser/nzos_video_proxy_message_filter.h",
+
+  ]
+
+  deps = [
+    "//third_party/boringssl",
+    "//third_party/nzos"
+  ]
+
+  public_deps = [
+    "//base",
+    "//media"
+  ] 
+
+  include_dirs = ["content/browser"]
+}
+
 source_set("nzos_media") {
   sources = [
     "media/nzos_video_decoder.cc",
     "media/nzos_video_decoder.h",
-    "media/nzos_video_decoder_cb.h",
+    "media/nzos_media_proxy_interface.h",
   ]
 
   public_deps = [

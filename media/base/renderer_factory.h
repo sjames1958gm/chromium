@@ -49,6 +49,8 @@ class MEDIA_EXPORT RendererFactory {
   // NOTE: Returns Type::STREAM by default.
   virtual MediaResource::Type GetRequiredMediaResourceType();
 
+ protected:
+
  private:
   DISALLOW_COPY_AND_ASSIGN(RendererFactory);
 };

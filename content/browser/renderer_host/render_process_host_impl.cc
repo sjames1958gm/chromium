@@ -272,6 +272,8 @@
 #include "services/service_manager/zygote/common/zygote_handle.h"  // nogncheck
 #endif
 
+#include "third_party/nzos/content/browser/nzos_video_proxy_message_filter.h"
+
 #if defined(OS_WIN)
 #define IntToStringType base::IntToString16
 #else
@@ -1974,6 +1976,8 @@ void RenderProcessHostImpl::CreateMessageFilters() {
   // from guests.
   bp_message_filter_ = new BrowserPluginMessageFilter(GetID());
   AddFilter(bp_message_filter_.get());
+
+  AddFilter(new NzVideoProxyMessageFilter(GetID())); //, resource_message_filter));
 
   scoped_refptr<net::URLRequestContextGetter> request_context(
       storage_partition_impl_->GetURLRequestContext());

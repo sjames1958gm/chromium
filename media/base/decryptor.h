@@ -157,6 +157,8 @@ class MEDIA_EXPORT Decryptor {
   // The decoder can be reinitialized after it is uninitialized.
   virtual void DeinitializeDecoder(StreamType stream_type) = 0;
 
+  virtual int GetDrmScheme() = 0;
+
  private:
   DISALLOW_COPY_AND_ASSIGN(Decryptor);
 };
