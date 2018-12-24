@@ -7,6 +7,9 @@
 #include "base/base_switches.h"
 #include "base/bind.h"
 #include "base/command_line.h"
+#include "content/child/child_process.h"
+#include "content/child/child_thread_impl.h"
+
 // #include "content/renderer/loader/resource_dispatcher.h"
 // #include "content/common/resource_messages.h"
 #include "ipc/ipc_logging.h"
@@ -37,14 +40,15 @@ bool NzLogMessageHandlerFunction(int severity,
                                  int line,
                                  size_t message_start,
                                  const std::string& str) {
-  if (str.length() > 1000) {
-    std::string repstr = str.substr(0, 999);
-    repstr += ". . . truncated";
-    NzVideoProxyDispatcher::Instance()->NzLog(severity, repstr);
-  } else {
-    NzVideoProxyDispatcher::Instance()->NzLog(severity, str);
+  if (NzVideoProxyDispatcher::Instance()) {
+    if (str.length() > 1000) {
+      std::string repstr = str.substr(0, 999);
+      repstr += ". . . truncated";
+      NzVideoProxyDispatcher::Instance()->NzLog(severity, repstr);
+    } else {
+      NzVideoProxyDispatcher::Instance()->NzLog(severity, str);
+    }
   }
-
   return true;
 }
 
@@ -67,7 +71,7 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
     const scoped_refptr<base::SingleThreadTaskRunner>& ipc_task_runner,
     // ResourceDispatcher* resource_dispatcher,
     IPC::Sender* sender)
-    : sender_(sender),
+    : //sender_(sender),
       ipc_task_runner_(ipc_task_runner),
       capabilities_rcvd_(false),
       h264_capable_(false),
@@ -81,9 +85,11 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
       target_bw_(TARGETBW),
       current_bw_(TARGETBW),
       reset_bw_calc_(false),
-      detect360VideoByCanvas_(false) {
-  const base::CommandLine* cmd_line = base::CommandLine::ForCurrentProcess();
+      detect360VideoByCanvas_(false)
+       {
 
+  const base::CommandLine* cmd_line = base::CommandLine::ForCurrentProcess();
+  
   // TODOSJ
   if (cmd_line->HasSwitch(switches::kEnableNZBWControl)) {
     LOG(INFO) << "NZ bandwidth control enabled";
@@ -93,16 +99,11 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
   }
 
   // Don't capture log only if the switch is present with value "no"
-  if (!cmd_line->HasSwitch(switches::kNzCaptureLog)) {
+  if (!cmd_line->HasSwitch(switches::kNzCaptureLog) ||
+     (cmd_line->GetSwitchValueASCII(switches::kNzCaptureLog).compare("no") == 0)) {
     logging::SetLogMessageHandler(NzLogMessageHandlerFunction);
-  } else {
-    std::string capture =
-        cmd_line->GetSwitchValueASCII(switches::kNzCaptureLog);
-    if (strcmp(capture.c_str(), "no") != 0) {
-      logging::SetLogMessageHandler(NzLogMessageHandlerFunction);
-    }
   }
-
+  
   s_Instance = this;
 
   media::NZVideoDecoder::SetProxyInterface(this);
@@ -111,15 +112,17 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
 NzVideoProxyDispatcher::~NzVideoProxyDispatcher() {}
 
 void NzVideoProxyDispatcher::Send(IPC::Message* message) {
-  DCHECK(ipc_task_runner_->BelongsToCurrentThread());
-  if (!sender_) {
-    delete message;
-  } else {
-    sender_->Send(message);
-  }
+  // DCHECK(ipc_task_runner_->BelongsToCurrentThread());
+  // if (!sender_) {
+  //   delete message;
+  // } else {
+  //   sender_->Send(message);
+  // }
 }
 
 bool NzVideoProxyDispatcher::OnMessageReceived(const IPC::Message& message) {
+
+  // if (message.type() >> 16 == 55) LOG(ERROR) << "SJSJ " << (message.type() & 0xffff);
   // DCHECK(ipc_task_runner_->BelongsToCurrentThread());
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(NzVideoProxyDispatcher, message)
@@ -136,17 +139,17 @@ bool NzVideoProxyDispatcher::OnMessageReceived(const IPC::Message& message) {
     // IPC_MESSAGE_HANDLER_GENERIC(ResourceMsg_RequestComplete, {
     //     handled = HandleCompleteMsg(message)
     //     ;
-    // }
+    // 
     //     )
     IPC_MESSAGE_UNHANDLED(handled = false)
   IPC_END_MESSAGE_MAP()
   return handled;
-
-  return false;
 }
 
 void NzVideoProxyDispatcher::OnFilterAdded(IPC::Channel* sender) {
   DCHECK(ipc_task_runner_->BelongsToCurrentThread());
+  LOG(ERROR) << "SJSJ";
+  sender_ = sender;
 }
 
 void NzVideoProxyDispatcher::OnFilterRemoved() {
@@ -163,6 +166,7 @@ void NzVideoProxyDispatcher::OnChannelClosing() {
 }
 
 void NzVideoProxyDispatcher::OnRenderId(const Nz_Proxy_Id& id_data) {
+  LOG(ERROR) << "OnRenderId";
   render_id_ = id_data.id;
 }
 
@@ -770,9 +774,13 @@ void NzVideoProxyDispatcher::ScrollVectorOnIOThread(const int X, const int Y) {
 }
 
 void NzVideoProxyDispatcher::NzLog(int severity, const std::string& log_msg) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE, base::Bind(&NzVideoProxyDispatcher::NzLogOnIOThread, this,
-                            severity, log_msg));
+    if (ipc_task_runner_->BelongsToCurrentThread()) {
+      content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Log(severity, log_msg));
+    }
+    else {
+      ipc_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::NzLog, this, severity, log_msg));
+    }
 }
 
 void NzVideoProxyDispatcher::NzLogOnIOThread(int severity,
@@ -795,6 +803,7 @@ void NzVideoProxyDispatcher::OnDeviceProperties(bool allowUserAgentChange,
             << ", Is Mobile: " << ((isMobileDevice) ? "Yes" : "No")
             << ", Device S/W: " << deviceSw;
 }
+
 double NzVideoProxyDispatcher::calcDelay(int64_t bits) {
   double des_secs = ((double)bits) / target_bw_;
 

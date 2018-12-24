@@ -164,9 +164,9 @@ private:
 
   double calcDelay(int64_t bits);
 
-  IPC::Sender* sender_;
+  IPC::Sender* sender_ = nullptr;
 
-  // Message loop on which IPC calls are driven.
+  // // Message loop on which IPC calls are driven.
   const scoped_refptr<base::SingleThreadTaskRunner>& ipc_task_runner_;
 
   // ResourceDispatcher* resource_dispatcher_;

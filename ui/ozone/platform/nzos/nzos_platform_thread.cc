@@ -182,10 +182,16 @@ NzosPlatformThread::~NzosPlatformThread() {
 
 NzosPlatformThread* NzosPlatformThread::Instance() {
   static NzosPlatformThread* instance_ = NULL;
-  if (!instance_) 
+  if (!instance_)  {
     instance_ = new NzosPlatformThread();
+  }
 
   return instance_;
+}
+
+void NzosPlatformThread::SetInterface(NzosPlatformInterface* intf) {
+  LOG(ERROR) << "Set Platform Interface";
+  platformInterface_ = intf;
 }
 
 bool NzosPlatformThread::IsAppConnected() {
@@ -263,7 +269,12 @@ void NzosPlatformThread::EventDevicePropertiesEx(void* pNzDevice) {
 
   sDeviceSw = software;
 
-  if (Instance()->platformInterface_) Instance()->platformInterface_->OnDevicePropertiesReceived(pNzDevice);
+  if (Instance()->platformInterface_) {
+    Instance()->platformInterface_->OnDevicePropertiesReceived(pNzDevice);
+  }
+  else {
+    NzLog("No platform interface registered");
+  }
 }
 
 void NzosPlatformThread::EventKeyboard(uint32_t Op, uint32_t u32Flags, uint32_t Key) {

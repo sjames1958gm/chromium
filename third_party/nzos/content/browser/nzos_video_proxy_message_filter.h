@@ -11,7 +11,6 @@
 #include "base/time/time.h"
 #include "base/timer/timer.h"
 #include "content/public/browser/browser_message_filter.h"
-#include "ui/ozone/platform/nzos/nzos_platform_interface.h"
 #include "third_party/nzos/include/nzos_media_proxy_messages.h"
 
 namespace content {
@@ -87,7 +86,9 @@ public:
   uint32_t scheme_;
 };
 
-class NzVideoProxyMessageFilter : public BrowserMessageFilter, ui::NzosPlatformInterface {
+class NzVideoProxyMessageFilterPlatformInterface;
+
+class NzVideoProxyMessageFilter : public BrowserMessageFilter {
 public:
   NzVideoProxyMessageFilter (int render_process_id); //, ResourceMessageFilter* rmf);
 
@@ -98,15 +99,17 @@ public:
 
   static void OnDevicePropertiesReceivedS (void* pNzDevice);
   static void StaticInitialization();
+  static NzVideoProxyMessageFilterPlatformInterface* platformInterface_;
 
   // BrowserMessageFilter implementation.
   bool OnMessageReceived (const IPC::Message& message) override;
-  // Events from NzApe
+  void OnFilterAdded (IPC::Channel* sender) override; 
+
+  // Events from nzos platform thread
   void OnKeyMessageReceived (uint32_t u32SessionId, uint32_t u32KeyRqstId,
                         const uint8_t* pOpaqueData, uint32_t u32OpaqueDataLen,
-                        const char* url, uint32_t u32UrlLen) override;
-  void OnFilterAdded (IPC::Channel* sender) override;
-  virtual void OnDevicePropertiesReceived (void* pNzDevice) override;
+                        const char* url, uint32_t u32UrlLen);
+  virtual void OnDevicePropertiesReceived (void* pNzDevice);
 
 private:
 

@@ -16,6 +16,8 @@
 #include "third_party/nzos/include/NzAppApiCb.h"
 #include "third_party/nzos/include/QzProperty.h"
 #include "ui/ozone/platform/nzos/nzos_platform_thread.h"
+#include "ui/ozone/platform/nzos/nzos_platform_interface.h"
+
 #include <sstream>
 
 using namespace std;
@@ -31,6 +33,53 @@ static int MaxAudioQueueSize = 5000;
 const char* g_KeyId = "1234567890123456";
 const uint8_t* g_u8KeyId = (const uint8_t*) g_KeyId;
 int g_KeyIdLen = 16;
+
+//
+// This is a interface object between ozone platform thread and message filter
+// required to avoid dependency cycle in build files
+// A single static instance of this class is created and passed to 
+// nzos_platform_thread in the ui/ozone/platform/nzos code
+//
+NzVideoProxyMessageFilterPlatformInterface* NzVideoProxyMessageFilter::platformInterface_  = nullptr;
+
+class NzVideoProxyMessageFilterPlatformInterface : public ui::NzosPlatformInterface {
+  public:
+    NzVideoProxyMessageFilterPlatformInterface() = default;
+    ~NzVideoProxyMessageFilterPlatformInterface() = default;
+
+    void OnDevicePropertiesReceived (void* pNzDevice) override;
+    void OnKeyMessageReceived(uint32_t u32SessionId,
+                              uint32_t u32KeyRqstId,
+                              const uint8_t* pOpaqueData,
+                              uint32_t u32OpaqueDataLen,
+                              const char* url,
+                              uint32_t u32UrlLen) override;
+
+};
+
+void NzVideoProxyMessageFilterPlatformInterface::OnDevicePropertiesReceived (void* pNzDevice) {
+  LOG(ERROR) << "OnDevicePropertiesReceived";
+  NzVideoProxyMessageFilter::OnDevicePropertiesReceivedS(pNzDevice);
+}
+
+void NzVideoProxyMessageFilterPlatformInterface::OnKeyMessageReceived(
+  uint32_t u32SessionId,
+  uint32_t u32KeyRqstId,
+  const uint8_t* pOpaqueData,
+  uint32_t u32OpaqueDataLen,
+  const char* url,
+  uint32_t u32UrlLen) {
+  
+    LOG(ERROR) << "OnKeyMessageReceived";
+    NzVideoProxyMessageFilter::OnKeyMessageReceivedS(
+      u32SessionId, 
+      u32KeyRqstId, 
+      pOpaqueData, 
+      u32OpaqueDataLen,
+      url,
+      u32UrlLen);
+  }
+
 
 NzStream::NzStream (int rtg_id, uint32_t key_sess, int other_stream_id,
                     uint32_t drm_scheme,
@@ -243,7 +292,7 @@ NzVideoProxyMessageFilter::NzVideoProxyMessageFilter (
     render_process_id_ (render_process_id), //resourceMessageFilter_ (rmf),
     clearkey_encrypt_ (false), widevine_encryption_ (false) {
 
-  LOG(INFO) << "NzVideoProxyMessageFilter Construct: Render Process ID: "
+  LOG(ERROR) << "NzVideoProxyMessageFilter Construct: Render Process ID: "
                << render_process_id_;
 
   StaticInitialization();
@@ -289,7 +338,10 @@ NzVideoProxyMessageFilter::NzVideoProxyMessageFilter (
   id_ = ids_++;
   nz_messageFilters_[id_] = this;
 
-  ui::NzosPlatformThread::Instance()->SetInterface(this);
+  if (!platformInterface_) {
+    platformInterface_ = new NzVideoProxyMessageFilterPlatformInterface();
+    ui::NzosPlatformThread::Instance()->SetInterface(platformInterface_);
+  }
 
   // It appears that device properties are received before this class
   // is instantiated.
@@ -423,6 +475,9 @@ NzVideoProxyMessageFilter::OnMessageReceived (const IPC::Message& message) {
 
 void
 NzVideoProxyMessageFilter::OnFilterAdded (IPC::Channel* sender) {
+  BrowserMessageFilter::OnFilterAdded(sender);
+
+  LOG(ERROR) << "OnFilterAdded";
 
   Nz_Proxy_Id id_data;
   id_data.id = render_process_id_;
@@ -497,6 +552,9 @@ NzVideoProxyMessageFilter::OnFilterAdded (IPC::Channel* sender) {
 
 void
 NzVideoProxyMessageFilter::OnDevicePropertiesReceived (void* pNzDevice) {
+
+  LOG(INFO) << "OnDevicePropertiesReceived";
+  
   SetEncryptionState (pNzDevice);
 
   bool useragentmod = NzConfigGetBool("NzChromium.UserAgentChange", false);
@@ -518,7 +576,7 @@ NzVideoProxyMessageFilter::OnKeyMessageReceived (uint32_t u32SessionId,
                                                  uint32_t u32UrlLen) {
   std::string urlStr (url, u32UrlLen);
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnKeyMessageReceivedUIThread,   
     base::Unretained(this), u32SessionId, u32KeyRqstId, pOpaqueData, u32OpaqueDataLen, urlStr));
 }
@@ -579,7 +637,7 @@ NzVideoProxyMessageFilter::OnKeyMessageReceivedUIThread (
 void
 NzVideoProxyMessageFilter::OnCreate (const Nz_Proxy_Create& create) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnCreateUIThread,
     base::Unretained(this), create));
 }
@@ -619,7 +677,7 @@ NzVideoProxyMessageFilter::OnCreateUIThread (const Nz_Proxy_Create& create) {
 void
 NzVideoProxyMessageFilter::OnStart (const Nz_Proxy_Initial_Data& init_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnStartUIThread,
     base::Unretained(this), init_data));
 
@@ -770,7 +828,7 @@ NzVideoProxyMessageFilter::OnStartUIThread (
 void
 NzVideoProxyMessageFilter::OnUpdate (const Nz_Proxy_Initial_Data& init_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnUpdateUIThread,
     base::Unretained(this), init_data));
 }
@@ -811,7 +869,7 @@ NzVideoProxyMessageFilter::OnUpdateUIThread (
 void
 NzVideoProxyMessageFilter::OnBoundingRect (const Nz_Proxy_Bounding_Rect& rect) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnBoundingRectUIThread,
     base::Unretained(this), rect));
 }
@@ -874,7 +932,7 @@ NzVideoProxyMessageFilter::OnBoundingRectUIThread (
 void
 NzVideoProxyMessageFilter::OnPlay (int id, double duration) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnPlayUIThread,
     base::Unretained(this), id, duration));
 }
@@ -927,7 +985,7 @@ NzVideoProxyMessageFilter::OnPlayUIThread (int id, double duration) {
 void
 NzVideoProxyMessageFilter::OnPause (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnPauseUIThread,
     base::Unretained(this), id));
 }
@@ -956,7 +1014,7 @@ NzVideoProxyMessageFilter::OnPauseUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnReset (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnResetUIThread,
     base::Unretained(this), id));
 }
@@ -986,7 +1044,7 @@ NzVideoProxyMessageFilter::OnResetUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnStop (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnStopUIThread,
     base::Unretained(this), id));
 }
@@ -1019,7 +1077,7 @@ NzVideoProxyMessageFilter::OnStopUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnDestroy (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnDestroyUIThread,
     base::Unretained(this), id));
 }
@@ -1060,7 +1118,7 @@ NzVideoProxyMessageFilter::OnDestroyUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnRemove(const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnRemoveUIThread,
     base::Unretained(this), id));
 }
@@ -1118,7 +1176,7 @@ NzVideoProxyMessageFilter::OnRemoveUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnRestore (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnRestoreUIThread,
     base::Unretained(this), id));
 }
@@ -1145,7 +1203,7 @@ NzVideoProxyMessageFilter::OnRestoreUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnBuffer (const Nz_Proxy_Media_Buffer& buffer) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnBufferUIThread,
     base::Unretained(this), buffer));
 }
@@ -1249,7 +1307,7 @@ NzVideoProxyMessageFilter::OnBufferUIThread (
 void
 NzVideoProxyMessageFilter::OnHidden (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnHiddenUIThread,
     base::Unretained(this), id));
 }
@@ -1281,7 +1339,7 @@ NzVideoProxyMessageFilter::OnHiddenUIThread (const Nz_Proxy_Id& id) {
 void
 NzVideoProxyMessageFilter::OnShown (const Nz_Proxy_Id& id) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnShownUIThread,
     base::Unretained(this), id));
 }
@@ -1314,7 +1372,7 @@ NzVideoProxyMessageFilter::OnShownUIThread (const Nz_Proxy_Id& id) {
 void NzVideoProxyMessageFilter::OnSeek(const Nz_Proxy_Seek& seek_data)
 {
     base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
       base::Bind(&NzVideoProxyMessageFilter::OnSeekUIThread,
       base::Unretained(this), seek_data));
 }
@@ -1340,7 +1398,7 @@ void NzVideoProxyMessageFilter::OnSeekUIThread(const Nz_Proxy_Seek& seek_data)
 void
 NzVideoProxyMessageFilter::OnAudioCreate (const Nz_Proxy_Create& create) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnAudioCreateUIThread,
     base::Unretained(this), create));
 }
@@ -1383,7 +1441,7 @@ void
 NzVideoProxyMessageFilter::OnAudioStart (
     const Nz_Audio_Initial_Data& init_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnAudioStartUIThread,
     base::Unretained(this), init_data));
 }
@@ -1447,7 +1505,7 @@ NzVideoProxyMessageFilter::OnAudioStartUIThread (
 void
 NzVideoProxyMessageFilter::OnAudioBuffer (const Nz_Proxy_Media_Buffer& buffer) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnAudioBufferUIThread,
     base::Unretained(this), buffer));
 }
@@ -1514,7 +1572,7 @@ NzVideoProxyMessageFilter::OnAudioBufferUIThread (
 void
 NzVideoProxyMessageFilter::OnAudioVolume (const Nz_Audio_Volume& volume_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnAudioVolumeUIThread,
     base::Unretained(this), volume_data));
 }
@@ -1542,7 +1600,7 @@ NzVideoProxyMessageFilter::OnAudioVolumeUIThread (
 void
 NzVideoProxyMessageFilter::OnAudioDestroy (const Nz_Proxy_Id& id_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnAudioDestroyUIThread,
     base::Unretained(this), id_data));
 }
@@ -1572,7 +1630,7 @@ NzVideoProxyMessageFilter::OnAudioDestroyUIThread (const Nz_Proxy_Id& id_data) {
 void
 NzVideoProxyMessageFilter::OnEncryptionDetected (const Nz_Proxy_Id& id_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnEncryptionDetectedUIThread,
     base::Unretained(this), id_data));
 }
@@ -1592,7 +1650,7 @@ void
 NzVideoProxyMessageFilter::OnDecryptorCreate (
     const Nz_Decrypt_Create& create_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnDecryptorCreateUIThread,
     base::Unretained(this), create_data));
 }
@@ -1623,7 +1681,7 @@ void
 NzVideoProxyMessageFilter::OnGenerateKeyRequest (
     const Nz_Generate_Key_Request& request_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnGenerateKeyRequestUIThread,
     base::Unretained(this), request_data));
 }
@@ -1648,7 +1706,7 @@ NzVideoProxyMessageFilter::OnGenerateKeyRequestUIThread (
 void
 NzVideoProxyMessageFilter::OnUpdateSession (const Nz_Key_Data& key_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnUpdateSessionUIThread,
     base::Unretained(this), key_data));
 }
@@ -1683,7 +1741,7 @@ void
 NzVideoProxyMessageFilter::OnReleaseSession (
     const Nz_Session_Release& session_data) {
   base::PostTaskWithTraits(
-    FROM_HERE, { content::BrowserThread::IO }, 
+    FROM_HERE, { content::BrowserThread::UI }, 
     base::Bind(&NzVideoProxyMessageFilter::OnReleaseSessionUIThread,
     base::Unretained(this), session_data));
 }

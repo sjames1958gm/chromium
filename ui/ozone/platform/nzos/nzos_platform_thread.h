@@ -42,7 +42,7 @@ enum NzosPlatformState {
 
 class NzosPlatformThread : public base::Thread {
  public:
-  void SetInterface(NzosPlatformInterface* intf) { platformInterface_ = intf;}
+  void SetInterface(NzosPlatformInterface* intf);
   bool IsDeviceConnected() { return ((state_ == NzosPlatformState::DeviceConnected) || (state_ == NzosPlatformState::AppVisible)); };
   bool IsAppConnected();
   bool IsAppVisible();

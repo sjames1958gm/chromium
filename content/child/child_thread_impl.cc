@@ -462,7 +462,7 @@ void ChildThreadImpl::Init(const Options& options) {
       std::make_unique<SimpleConnectionFilter>(std::move(registry)));
 
   nz_video_proxy_dispatcher_ =
-    new NzVideoProxyDispatcher(GetIOTaskRunner(), this);
+    new NzVideoProxyDispatcher(main_thread_runner_, this);
 
   InitTracing();
 
@@ -725,11 +725,12 @@ std::unique_ptr<base::SharedMemory> ChildThreadImpl::AllocateSharedMemory(
 }
 
 bool ChildThreadImpl::OnMessageReceived(const IPC::Message& msg) {
+
+  if (nz_video_proxy_dispatcher_ && nz_video_proxy_dispatcher_->OnMessageReceived(msg))
+    return true;
+
   if (msg.routing_id() == MSG_ROUTING_CONTROL)
     return OnControlMessageReceived(msg);
-
-  if (nz_video_proxy_dispatcher_->OnMessageReceived(msg))
-    return true;
 
   return router_.OnMessageReceived(msg);
 }

@@ -3164,6 +3164,13 @@ void RenderProcessHostImpl::PropagateBrowserCommandLineToRenderer(
     switches::kIpcDumpDirectory,
     switches::kIpcFuzzerTestcase,
 #endif
+    switches::kEnableNZDecoding,
+    switches::kDisableNZAudioDecoding,
+    switches::kEnableNZBWControl,
+    switches::kNzPermitVpCodecs,
+    switches::kNzCaptureLog,
+    switches::kNzVideoQueueSize,
+    switches::kNzAudioQueueSize
   };
   renderer_cmd->CopySwitchesFrom(browser_cmd, kSwitchNames,
                                  arraysize(kSwitchNames));
