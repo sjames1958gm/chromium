@@ -37,7 +37,6 @@ enum LinuxAudioIO {
 std::unique_ptr<media::AudioManager> CreateAudioManager(
     std::unique_ptr<AudioThread> audio_thread,
     AudioLogFactory* audio_log_factory) {
-      LOG(ERROR) << "SJSJ"; 
 #if defined(USE_CRAS)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kUseCras)) {
     UMA_HISTOGRAM_ENUMERATION("Media.LinuxAudioIO", kCras, kAudioIOMax + 1);
@@ -46,15 +45,11 @@ std::unique_ptr<media::AudioManager> CreateAudioManager(
   }
 #endif
 
-      LOG(ERROR) << "SJSJ";
 #if defined(USE_NZOSAUDIO)
-      LOG(ERROR) << "SJSJ";
   // AudioManager* manager = AudioManagerNzOS::Create();
     UMA_HISTOGRAM_ENUMERATION("Media.NzOsAudioIO", kNzOS, kAudioIOMax + 1);
     return std::make_unique<AudioManagerNzOS>(std::move(audio_thread), audio_log_factory);
 #endif
-
-      LOG(ERROR) << "SJSJ";
 
 #if defined(USE_PULSEAUDIO)
   pa_threaded_mainloop* pa_mainloop = nullptr;

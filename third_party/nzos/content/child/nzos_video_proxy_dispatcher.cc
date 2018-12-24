@@ -122,7 +122,7 @@ void NzVideoProxyDispatcher::Send(IPC::Message* message) {
 
 bool NzVideoProxyDispatcher::OnMessageReceived(const IPC::Message& message) {
 
-  // if (message.type() >> 16 == 55) LOG(ERROR) << "SJSJ " << (message.type() & 0xffff);
+  // if (message.type() >> 16 == 55) LOG(ERROR) << "OnMessageReceived " << (message.type() & 0xffff);
   // DCHECK(ipc_task_runner_->BelongsToCurrentThread());
   bool handled = true;
   IPC_BEGIN_MESSAGE_MAP(NzVideoProxyDispatcher, message)
@@ -148,7 +148,6 @@ bool NzVideoProxyDispatcher::OnMessageReceived(const IPC::Message& message) {
 
 void NzVideoProxyDispatcher::OnFilterAdded(IPC::Channel* sender) {
   DCHECK(ipc_task_runner_->BelongsToCurrentThread());
-  LOG(ERROR) << "SJSJ";
   sender_ = sender;
 }
 
