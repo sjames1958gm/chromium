@@ -1641,7 +1641,6 @@ void BrowserMainLoop::EndStartupTracing() {
 
 void BrowserMainLoop::InitializeAudio() {
   DCHECK(!audio_manager_);
-LOG(ERROR) << "SJSJ";
   audio_manager_ = GetContentClient()->browser()->CreateAudioManager(
       MediaInternals::GetInstance());
   DCHECK_EQ(!!audio_manager_,
