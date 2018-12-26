@@ -14,8 +14,6 @@
 #include "ipc/message_filter.h"
 #include "third_party/nzos/media/nzos_media_proxy_interface.h"
 
-#define NZ_BUFFER_MEDIA 1
-
 namespace base {
 class MessageLoop;
 }
@@ -112,36 +110,20 @@ class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter, media::
   virtual bool HandleCompleteMsg(const IPC::Message& message);
   virtual void PostMsg();
 
-  void CreateOnIOThread(const Nz_Proxy_Create& create_data);
-  void StartOnIOThread(const Nz_Proxy_Initial_Data& init_data);
-  void UpdateOnIOThread(const Nz_Proxy_Initial_Data& init_data);
-  void BoundingRectOnIOThread(const Nz_Proxy_Bounding_Rect& bounding_rect);
-  void PlayOnIOThread(int id, double duration);
-  void PauseOnIOThread(const Nz_Proxy_Id& id_data);
-  void ResetOnIOThread(const Nz_Proxy_Id& id_data);
-  void StopOnIOThread(const Nz_Proxy_Id& id_data);
   void DestroyOnIOThread(const Nz_Proxy_Id& id_data);
   void RemoveOnIOThread(const Nz_Proxy_Id& id_data);
   void RestoreOnIOThread(const Nz_Proxy_Id& id_data);
-  void BufferOnIOThread(const Nz_Proxy_Media_Buffer& buffer);
   void HiddenOnIOThread(const Nz_Proxy_Id& id_data);
   void ShownOnIOThread(const Nz_Proxy_Id& id_data);
   void SeekOnIOThread(const Nz_Proxy_Seek& seek_data);
   void ScrollVectorOnIOThread(const int X, const int Y);
 
  public:
-  virtual void AudioCreate(const Nz_Proxy_Create& create_data);
-  virtual void AudioStart(const Nz_Audio_Initial_Data& init_data);
-  virtual void AudioBuffer(const Nz_Proxy_Media_Buffer& buffer);
-  virtual void AudioVolume(const Nz_Audio_Volume& volume_data);
-  virtual void AudioDestroy(const Nz_Proxy_Id& id_data);
-
-private:
-  virtual void AudioCreateOnIOThread(const Nz_Proxy_Create& create_data);
-  virtual void AudioStartOnIOThread(const Nz_Audio_Initial_Data& init_data);
-  virtual void AudioBufferOnIOThread(const Nz_Proxy_Media_Buffer& buffer);
-  virtual void AudioVolumeOnIOThread(const Nz_Audio_Volume& volume_data);
-  virtual void AudioDestroyOnIOThread(const Nz_Proxy_Id& id_data);
+  void AudioCreate(const Nz_Proxy_Create& create_data) override;
+  void AudioStart(const Nz_Audio_Initial_Data& init_data) override;
+  void AudioBuffer(const Nz_Proxy_Media_Buffer& buffer) override;
+  void AudioVolume(const Nz_Audio_Volume& volume_data) override;
+  void AudioDestroy(const Nz_Proxy_Id& id_data) override;
 
 public:
   virtual void CreateDecryptor(const Nz_Decrypt_Create& create_data);

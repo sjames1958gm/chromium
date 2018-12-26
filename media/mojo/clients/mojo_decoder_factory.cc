@@ -30,7 +30,8 @@ MojoDecoderFactory::~MojoDecoderFactory() = default;
 void MojoDecoderFactory::CreateAudioDecoders(
     scoped_refptr<base::SingleThreadTaskRunner> task_runner,
     MediaLog* media_log,
-    std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders) {
+    std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders,
+    int streamId) {
 #if BUILDFLAG(ENABLE_MOJO_AUDIO_DECODER)
   mojom::AudioDecoderPtr audio_decoder_ptr;
   interface_factory_->CreateAudioDecoder(mojo::MakeRequest(&audio_decoder_ptr));
@@ -46,7 +47,8 @@ void MojoDecoderFactory::CreateVideoDecoders(
     MediaLog* media_log,
     const RequestOverlayInfoCB& request_overlay_info_cb,
     const gfx::ColorSpace& target_color_space,
-    std::vector<std::unique_ptr<VideoDecoder>>* video_decoders) {
+    std::vector<std::unique_ptr<VideoDecoder>>* video_decoders,
+    int streamId) {
 #if BUILDFLAG(ENABLE_MOJO_VIDEO_DECODER)
   // If MojoVideoDecoder is not enabled, then return without adding anything.
   if (!base::FeatureList::IsEnabled(media::kMojoVideoDecoder))

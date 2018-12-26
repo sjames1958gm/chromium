@@ -7,13 +7,14 @@
 
 #include "base/callback.h"
 #include "base/memory/ref_counted.h"
-#include "third_party/nzos/media/nzos_media_proxy_interface.h"
 // #include "content/public/renderer/render_frame_observer.h"
 #include "media/base/video_decoder.h"
 #include "media/base/video_decoder_config.h"
 #include "media/base/video_frame_pool.h"
 #include "media/ffmpeg/ffmpeg_deleters.h"
 #include "third_party/blink/public/platform/web_string.h"
+#include "third_party/nzos/media/nzos_media_proxy_interface.h"
+
 
 namespace base {
 class SingleThreadTaskRunner;
@@ -35,7 +36,7 @@ class DecoderBuffer;
 class MEDIA_EXPORT NZVideoDecoder : public VideoDecoder {
  public:
   explicit NZVideoDecoder(
-      const scoped_refptr<base::SingleThreadTaskRunner>& task_runner);
+      const scoped_refptr<base::SingleThreadTaskRunner>& task_runner, int streamId);
   ~NZVideoDecoder() override;
 
   static void OnDestructS(int routing_id);

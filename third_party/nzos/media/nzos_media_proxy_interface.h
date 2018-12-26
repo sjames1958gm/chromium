@@ -3,6 +3,8 @@
 
 #include "third_party/nzos/include/nzos_media_proxy_messages.h"
 
+#define NZ_BUFFER_MEDIA 0
+
 namespace media {
 
   class NzosMediaProxyInterface {
@@ -10,6 +12,8 @@ namespace media {
     virtual ~NzosMediaProxyInterface() {}
 
     virtual int RenderId() = 0;
+
+    // Video interfaces
     virtual void Create(const Nz_Proxy_Create&) = 0;
     virtual bool H264Capable();
     virtual bool Vp8Capable();
@@ -28,6 +32,13 @@ namespace media {
     virtual void BoundingRect(const Nz_Proxy_Bounding_Rect&) = 0;
     virtual void Remove(const Nz_Proxy_Id&) = 0;
     virtual void Restore(const Nz_Proxy_Id&) = 0;
+
+    // Audio interfaces
+    virtual void AudioCreate(const Nz_Proxy_Create&) = 0;
+    virtual void AudioStart(const Nz_Audio_Initial_Data&) = 0;
+    virtual void AudioVolume(const Nz_Audio_Volume&) = 0;
+    virtual void AudioBuffer(const Nz_Proxy_Media_Buffer&) = 0;
+    virtual void AudioDestroy(const Nz_Proxy_Id&) = 0;
 
   };
 

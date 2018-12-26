@@ -40,7 +40,7 @@ using blink::WebString;
 
 namespace media {
 
-  #define NZ_BUFFER_MEDIA 1
+  #define NZ_BUFFER_MEDIA 0
 
 // Convert a WebString to ASCII, falling back on an empty string in the case
 // of a non-ASCII string.
@@ -73,12 +73,12 @@ bool NZVideoDecoder::IsEnabled() {
 }
 
 NZVideoDecoder::NZVideoDecoder(
-    const scoped_refptr<base::SingleThreadTaskRunner>& task_runner) :
+    const scoped_refptr<base::SingleThreadTaskRunner>& task_runner, int streamId) :
       task_runner_(task_runner),
       nzosMediaProxyInterface_(proxyInterface),
       extra_data_parsed_(false),
-      id_(0),
-      buffer_media_(1), // TODOSJ
+      id_(streamId),
+      buffer_media_(0), // TODOSJ
       length_size_(0),
       first_idr_(true),
       failed_(false),
@@ -93,11 +93,12 @@ NZVideoDecoder::NZVideoDecoder(
       bytes_decoded_(0),
       audio_decoder_id_(0),
       current_timestamp_(kNoTimestamp) {
-  routing_id_ = nzosMediaProxyInterface_->RenderId();
 
-    id_ = nzosMediaProxyInterface_->RenderId() * 10000 + ids++;
+  routing_id_ = nzosMediaProxyInterface_ ? nzosMediaProxyInterface_->RenderId() : 0;
 
-    LOG(INFO) << "NZ: Construct: " << id_ << " Render View Id: " << routing_id_;
+    // id_ = routing_id_ * 10000 + ids++;
+
+    LOG(ERROR) << "NZ: Construct: " << id_ << " Render View Id: " << routing_id_;
 
     nz_decoders_[id_] = this;
 }
@@ -111,8 +112,8 @@ void NZVideoDecoder::SetProxyInterface(NzosMediaProxyInterface* inst) {
 // Static
 NZVideoDecoder* NZVideoDecoder::Create(
     const scoped_refptr<base::SingleThreadTaskRunner>& task_runner) {
-// Not used
-return nullptr;
+  // TODOSJ - no longer used
+  return nullptr;
 }
 
 // The following three are no longer called - need to understand how they can
@@ -165,7 +166,7 @@ void NZVideoDecoder::Initialize(
     create_data.bypass_url = by_pass_url_;
     create_data.bypass_corr = by_pass_corr_;
 
-    nzosMediaProxyInterface_->Create(create_data);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Create(create_data);
   }
 
   output_cb_ = BindToCurrentLoop(output_cb);
@@ -173,9 +174,9 @@ void NZVideoDecoder::Initialize(
   config_ = config;
   InitCB bound_init_cb = BindToCurrentLoop(init_cb);
 
-  LOG(INFO) << "NZ: Initialize: id: " << id_
+  LOG(ERROR) << "NZ: Initialize: id: " << id_
             << " config: " << config.AsHumanReadableString();
-  LOG(INFO) << "NZ: Extra Data Size " << config.extra_data().size();
+  LOG(ERROR) << "NZ: Extra Data Size " << config.extra_data().size();
 
   // if (config.extra_data().size() > 0) {
   //   char buff[1000] = {0};
@@ -184,18 +185,18 @@ void NZVideoDecoder::Initialize(
   //   for (size_t i = 0; i < config.extra_data_size(); i++) {
   //     bp += sprintf(bp, "%2.2X, ", ep[i]);
   //   }
-  //   LOG(INFO) << "NZ: Extra Data: " << buff;
+  //   LOG(ERROR) << "NZ: Extra Data: " << buff;
   // }
 
   bool supported = false;
   if (config.codec() == kCodecH264) {
-    supported = nzosMediaProxyInterface_->H264Capable();
+    supported = nzosMediaProxyInterface_ ? nzosMediaProxyInterface_->H264Capable() : false;
     codec_ = NZ_IPC_CODEC_H264;
   } else if (config.codec() == kCodecVP8) {
-    supported = nzosMediaProxyInterface_->Vp8Capable();
+    supported = nzosMediaProxyInterface_ ? nzosMediaProxyInterface_->Vp8Capable() : false;
     codec_ = NZ_IPC_CODEC_VP8;
   } else if (config.codec() == kCodecVP9) {
-    supported = nzosMediaProxyInterface_->Vp9Capable();
+    supported = nzosMediaProxyInterface_ ? nzosMediaProxyInterface_->Vp9Capable() : false;
     codec_ = NZ_IPC_CODEC_VP9;
   }
 
@@ -218,7 +219,7 @@ void NZVideoDecoder::Initialize(
     init_data.codec = codec_;
     init_data.visible_rect = config_.visible_rect();
     init_data.video_size = config_.coded_size();
-    nzosMediaProxyInterface_->Start(init_data);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Start(init_data);
     state_ = kInited;
 
   } else {
@@ -228,7 +229,7 @@ void NZVideoDecoder::Initialize(
     init_data.visible_rect = config_.visible_rect();
     init_data.video_size = config_.coded_size();
 
-    nzosMediaProxyInterface_->Update(init_data);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Update(init_data);
   }
 
   // TODO: Clear this onr not?
@@ -257,12 +258,12 @@ void NZVideoDecoder::Decode(scoped_refptr<DecoderBuffer> buffer,
 void NZVideoDecoder::Reset(const base::Closure& closure) {
   DCHECK(task_runner_->BelongsToCurrentThread());
   DCHECK(decode_cb_.is_null());
-  LOG(INFO) << "NZ: Reset: " << id_ << " (pkts/bytes: " << packets_decoded_
+  LOG(ERROR) << "NZ: Reset: " << id_ << " (pkts/bytes: " << packets_decoded_
             << "/" << bytes_decoded_ << ")";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Reset(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Reset(id_data);
 
   while (buffer_list_.size() > 0) {
     Nz_Proxy_Media_Buffer* b = buffer_list_.front();
@@ -283,40 +284,40 @@ void NZVideoDecoder::Reset(const base::Closure& closure) {
 
 void NZVideoDecoder::Play(double duration) {
   DCHECK(task_runner_->BelongsToCurrentThread());
-  LOG(INFO) << "NZ: Play: " << id_ << " (pkts/bytes: " << packets_decoded_
+  LOG(ERROR) << "NZ: Play: " << id_ << " (pkts/bytes: " << packets_decoded_
             << "/" << bytes_decoded_ << ")";
   LOG(ERROR) << "Duration: " << duration;
 
-  nzosMediaProxyInterface_->Play(id_, duration);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Play(id_, duration);
 }
 
 void NZVideoDecoder::Pause() {
   DCHECK(task_runner_->BelongsToCurrentThread());
-  LOG(INFO) << "NZ: Pause: " << id_ << " (pkts/bytes: " << packets_decoded_
+  LOG(ERROR) << "NZ: Pause: " << id_ << " (pkts/bytes: " << packets_decoded_
             << "/" << bytes_decoded_ << ")";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Pause(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Pause(id_data);
 }
 
 void NZVideoDecoder::Stop() {
   DCHECK(task_runner_->BelongsToCurrentThread());
-  LOG(INFO) << "NZ: Stop: " << id_ << " (pkts/bytes: " << packets_decoded_
+  LOG(ERROR) << "NZ: Stop: " << id_ << " (pkts/bytes: " << packets_decoded_
             << "/" << bytes_decoded_ << ")";
 
   state_ = kIdle;
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Stop(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Stop(id_data);
 }
 
 void NZVideoDecoder::SetKeySystem(const blink::WebString& key_system) {
   // std::string ascii_key_system = GetUnprefixedKeySystemName(ToASCIIOrEmpty(key_system));
   std::string ascii_key_system = ToASCIIOrEmpty(key_system);
 
-  LOG(INFO) << "Set Key System: " << ToASCIIOrEmpty(key_system) << " -> "
+  LOG(ERROR) << "Set Key System: " << ToASCIIOrEmpty(key_system) << " -> "
             << ascii_key_system;
   if (ascii_key_system.compare("org.w3.clearkey") == 0) {
     decryptScheme_ = e_QzPropertyDrmScheme_ClearKey;
@@ -326,12 +327,12 @@ void NZVideoDecoder::SetKeySystem(const blink::WebString& key_system) {
 }
 
 void NZVideoDecoder::SetKeySystem(int key_system) {
-  LOG(INFO) << "Set Key System: " << key_system;
+  LOG(ERROR) << "Set Key System: " << key_system;
   decryptScheme_ = key_system;
 }
 
 NZVideoDecoder::~NZVideoDecoder() {
-  LOG(INFO) << "NZ: Destruct: " << id_;
+  LOG(ERROR) << "NZ: Destruct: " << id_;
 
   while (buffer_list_.size() > 0) {
     Nz_Proxy_Media_Buffer* b = buffer_list_.front();
@@ -343,7 +344,7 @@ NZVideoDecoder::~NZVideoDecoder() {
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Destroy(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Destroy(id_data);
 }
 
 void NZVideoDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer) {
@@ -450,7 +451,7 @@ void NZVideoDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer) {
     if (by_pass_url_.size() > 0) {
       delete proxy_buffer;
     } else if (didSeek_ || !buffer_media_) {
-      nzosMediaProxyInterface_->Buffer(*proxy_buffer);
+      if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Buffer(*proxy_buffer);
       delete proxy_buffer;
     } else {
       buffer_list_.push_back(proxy_buffer);
@@ -476,7 +477,7 @@ void NZVideoDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer) {
     base::ResetAndReturn(&decode_cb_).Run(DecodeStatus::OK);
 
   } else {
-    LOG(INFO) << "end_of_stream";
+    LOG(ERROR) << "end_of_stream";
     proxy_buffer->end_of_stream = true;
     delete proxy_buffer;
 
@@ -506,13 +507,13 @@ void NZVideoDecoder::FrameReady(base::TimeDelta timeStamp) {
     }
 
     if (proxy_buffer->computed_timestamp == timeStamp.InMicroseconds()) {
-      nzosMediaProxyInterface_->Buffer(*proxy_buffer);
+      if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Buffer(*proxy_buffer);
       delete proxy_buffer;
       break;
     } else if (proxy_buffer->computed_timestamp < timeStamp.InMicroseconds()) {
       VLOG(1) << "Extra in list: " << proxy_buffer->computed_timestamp << "/"
               << timeStamp.InMicroseconds();
-      nzosMediaProxyInterface_->Buffer(*proxy_buffer);
+      if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Buffer(*proxy_buffer);
       delete proxy_buffer;
       count++;
     } else {
@@ -525,11 +526,11 @@ void NZVideoDecoder::FrameReady(base::TimeDelta timeStamp) {
 
   didSeek_ = false;
   if (count > 0)
-    LOG(INFO) << "Extra buffers processed: count = " << count;
+    LOG(ERROR) << "Extra buffers processed: count = " << count;
 }
 
 void NZVideoDecoder::OnSeek(bool seeking, base::TimeDelta seekTime) {
-  LOG(INFO) << "On Seek - " << (seeking ? "seeking" : "not seeking");
+  LOG(ERROR) << "On Seek - " << (seeking ? "seeking" : "not seeking");
   seeking_ = seeking;
 
   if (seeking)  // && (seekTime.InMicroseconds() != 0))
@@ -537,7 +538,7 @@ void NZVideoDecoder::OnSeek(bool seeking, base::TimeDelta seekTime) {
     Nz_Proxy_Seek seek_data;
     seek_data.id = id_;
     seek_data.seek_time = seekTime.InMicroseconds();
-    nzosMediaProxyInterface_->Seek(seek_data);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Seek(seek_data);
   }
 }
 
@@ -649,23 +650,23 @@ bool NZVideoDecoder::DecodeBufferWithExtraData(
 }
 
 void NZVideoDecoder::OnDestruct() {
-  LOG(INFO) << "NZ: OnDestruct";
+  LOG(ERROR) << "NZ: OnDestruct";
 }
 
 void NZVideoDecoder::WasHidden() {
-  LOG(INFO) << "NZ: WasHidden";
+  LOG(ERROR) << "NZ: WasHidden";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Hidden(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Hidden(id_data);
 }
 
 void NZVideoDecoder::WasShown() {
-  LOG(INFO) << "NZ: WasShown";
+  LOG(ERROR) << "NZ: WasShown";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Shown(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Shown(id_data);
 }
 
 void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
@@ -686,7 +687,7 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
     Nz_Proxy_Bounding_Rect br;
     br.id = id_;
     br.bounding_rect.SetRect(r.x(), r.y(), r.width(), r.height());
-    nzosMediaProxyInterface_->BoundingRect(br);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->BoundingRect(br);
 
     bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
     reference_bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
@@ -700,9 +701,9 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
       (r.height() != bounding_rect_.height())) {
     bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
 
-    LOG(INFO) << "NZ: SetBoundingRect (current) : " << id_
+    LOG(ERROR) << "NZ: SetBoundingRect (current) : " << id_
               << ", r = " << bounding_rect_.ToString();
-    LOG(INFO) << "NZ: SetBoundingRect (new): " << id_
+    LOG(ERROR) << "NZ: SetBoundingRect (new): " << id_
               << ", r = " << r.ToString();
 
     int x = r.x();
@@ -731,13 +732,13 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
       }
     }
 
-    LOG(INFO) << "Set BoundingRect: x: " << x << ", y: " << y << ", " << width
+    LOG(ERROR) << "Set BoundingRect: x: " << x << ", y: " << y << ", " << width
               << "x" << height;
 
     Nz_Proxy_Bounding_Rect br;
     br.id = id_;
     br.bounding_rect.SetRect(x, y, width, height);
-    nzosMediaProxyInterface_->BoundingRect(br);
+    if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->BoundingRect(br);
 
     // Reset the reference bounding rect if both width and height change at the
     // same time
@@ -750,19 +751,19 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
 }
 
 void NZVideoDecoder::Hide() {
-  LOG(INFO) << "NZ: Hide";
+  LOG(ERROR) << "NZ: Hide";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Remove(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Remove(id_data);
 }
 
 void NZVideoDecoder::Show() {
-  LOG(INFO) << "NZ: Show";
+  LOG(ERROR) << "NZ: Show";
 
   Nz_Proxy_Id id_data;
   id_data.id = id_;
-  nzosMediaProxyInterface_->Restore(id_data);
+  if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Restore(id_data);
 }
 
 }  // namespace media

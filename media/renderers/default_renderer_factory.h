@@ -48,12 +48,14 @@ class MEDIA_EXPORT DefaultRendererFactory : public RendererFactory {
 
  private:
   std::vector<std::unique_ptr<AudioDecoder>> CreateAudioDecoders(
-      const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner);
+      const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner,
+      int streamId);
   std::vector<std::unique_ptr<VideoDecoder>> CreateVideoDecoders(
       const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner,
       const RequestOverlayInfoCB& request_overlay_info_cb,
       const gfx::ColorSpace& target_color_space,
-      GpuVideoAcceleratorFactories* gpu_factories);
+      GpuVideoAcceleratorFactories* gpu_factories,
+      int streamId);
 
   MediaLog* media_log_;
 
@@ -63,6 +65,8 @@ class MEDIA_EXPORT DefaultRendererFactory : public RendererFactory {
 
   // Creates factories for supporting video accelerators. May be null.
   GetGpuFactoriesCB get_gpu_factories_cb_;
+
+  static int streamId_;
 
   DISALLOW_COPY_AND_ASSIGN(DefaultRendererFactory);
 };

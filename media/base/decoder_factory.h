@@ -39,7 +39,8 @@ class MEDIA_EXPORT DecoderFactory {
   virtual void CreateAudioDecoders(
       scoped_refptr<base::SingleThreadTaskRunner> task_runner,
       MediaLog* media_log,
-      std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders);
+      std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders,
+      int streamId = 0);
 
   // Creates video decoders and append them to the end of |video_decoders|.
   // Decoders are single-threaded, each decoder should run on |task_runner|.
@@ -49,7 +50,8 @@ class MEDIA_EXPORT DecoderFactory {
       MediaLog* media_log,
       const RequestOverlayInfoCB& request_overlay_info_cb,
       const gfx::ColorSpace& target_color_space,
-      std::vector<std::unique_ptr<VideoDecoder>>* video_decoders);
+      std::vector<std::unique_ptr<VideoDecoder>>* video_decoders,
+      int streamId = 0);
 
   int GetNzAudioDecoderId() { return nz_audio_decoder_id_; }
   int GetNzVideoDecoderId() { return nz_video_decoder_id_; }
