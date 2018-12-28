@@ -816,6 +816,19 @@ void WebMediaPlayerImpl::DoSeek(base::TimeDelta time, bool time_updated) {
   seek_time_ = time;
   if (paused_)
     paused_time_ = time;
+
+  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (videoDecoder) {
+    LOG(ERROR) << "Seeking: " << seek_time_.InMicroseconds();
+    videoDecoder->OnSeek(seeking_, seek_time_);
+  } else {
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      LOG(ERROR) << "Seeking: " << seek_time_.InMicroseconds();
+      audioDecoder->OnSeek(seeking_, seek_time_);
+    }
+  }
+
   pipeline_controller_.Seek(time, time_updated);
 
   // This needs to be called after Seek() so that if a resume is triggered, it
@@ -1461,6 +1474,11 @@ void WebMediaPlayerImpl::OnPipelineSeeked(bool time_updated) {
                seek_time_.InSecondsF(), "id", media_log_->id());
   seeking_ = false;
   seek_time_ = base::TimeDelta();
+
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    decoder->OnSeek(seeking_, seek_time_);
+  }
 
   if (paused_) {
 #if defined(OS_ANDROID)  // WMPI_CAST
