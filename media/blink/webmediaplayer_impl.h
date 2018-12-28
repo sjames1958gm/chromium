@@ -949,8 +949,6 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   bool did_lazy_load_ = false;
 
   int drm_scheme_;
-  int video_decoder_id_;
-  int audio_decoder_id_;
 
   DISALLOW_COPY_AND_ASSIGN(WebMediaPlayerImpl);
 };

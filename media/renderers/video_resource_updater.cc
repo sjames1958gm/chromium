@@ -534,16 +534,13 @@ void VideoResourceUpdater::AppendQuads(viz::RenderPass* render_pass,
       break;
     }
     case VideoFrameResourceType::HOLE: {
-    // TODOSJ
-
       viz::SolidColorDrawQuad* solid_color_draw_quad =
           render_pass->CreateAndAppendDrawQuad<viz::SolidColorDrawQuad>();
       // Create a solid color quad with transparent black and force no
       // blending / no anti-aliasing.
-      gfx::Rect opaque_rect = quad_rect;
       solid_color_draw_quad->SetAll(shared_quad_state,
                                     quad_rect,
-                                    opaque_rect,
+                                    visible_quad_rect,
                                     false,
                                     SK_ColorTRANSPARENT,
                                     true);

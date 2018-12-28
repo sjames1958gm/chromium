@@ -23,11 +23,12 @@ std::unique_ptr<Renderer> FlingingRendererClientFactory::CreateRenderer(
     AudioRendererSink* audio_renderer_sink,
     VideoRendererSink* video_renderer_sink,
     const RequestOverlayInfoCB& request_overlay_info_cb,
-    const gfx::ColorSpace& target_color_space) {
+    const gfx::ColorSpace& target_color_space,
+    int streamId) {
   DCHECK(IsFlingingActive());
   return mojo_flinging_factory_->CreateRenderer(
       media_task_runner, worker_task_runner, audio_renderer_sink,
-      video_renderer_sink, request_overlay_info_cb, target_color_space);
+      video_renderer_sink, request_overlay_info_cb, target_color_space, streamId);
 }
 
 std::string FlingingRendererClientFactory::GetActivePresentationId() {

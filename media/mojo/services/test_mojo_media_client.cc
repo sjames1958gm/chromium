@@ -87,7 +87,7 @@ std::unique_ptr<Renderer> TestMojoMediaClient::CreateRenderer(
 
   return renderer_factory_->CreateRenderer(
       task_runner, task_runner, audio_sink.get(), video_sink_ptr,
-      RequestOverlayInfoCB(), gfx::ColorSpace());
+      RequestOverlayInfoCB(), gfx::ColorSpace(), 0);
 
 }  // namespace media
 

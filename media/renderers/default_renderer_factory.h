@@ -44,7 +44,8 @@ class MEDIA_EXPORT DefaultRendererFactory : public RendererFactory {
       AudioRendererSink* audio_renderer_sink,
       VideoRendererSink* video_renderer_sink,
       const RequestOverlayInfoCB& request_overlay_info_cb,
-      const gfx::ColorSpace& target_color_space) final;
+      const gfx::ColorSpace& target_color_space,
+      int streamId) final;
 
  private:
   std::vector<std::unique_ptr<AudioDecoder>> CreateAudioDecoders(
@@ -65,8 +66,6 @@ class MEDIA_EXPORT DefaultRendererFactory : public RendererFactory {
 
   // Creates factories for supporting video accelerators. May be null.
   GetGpuFactoriesCB get_gpu_factories_cb_;
-
-  static int streamId_;
 
   DISALLOW_COPY_AND_ASSIGN(DefaultRendererFactory);
 };

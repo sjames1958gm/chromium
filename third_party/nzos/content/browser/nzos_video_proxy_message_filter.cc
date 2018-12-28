@@ -725,10 +725,10 @@ NzVideoProxyMessageFilter::OnStartUIThread (
   else if (s->drm_scheme_ == e_QzPropertyDrmScheme_ClearKey)
     surfCodec |= QZ_SURF_ENCRYPT_CLEARKEY;
 
-  LOG(INFO) << "NzSurfCreate : " << init_data.id << " other stream id "
+  LOG(ERROR) << "NzSurfCreate : " << init_data.id << " other stream id "
                << s->other_stream_id_;
 
-  LOG(INFO) << "NzSurfCreate : Codec: " << codecStr << ", (x,y) ("
+  LOG(ERROR) << "NzSurfCreate : Codec: " << codecStr << ", (x,y) ("
                << init_data.visible_rect.origin ().x () << ", "
                << init_data.visible_rect.origin ().y () << "), HxW: "
                << init_data.visible_rect.height () << "x"
@@ -741,6 +741,7 @@ NzVideoProxyMessageFilter::OnStartUIThread (
                               init_data.visible_rect.origin ().x (),
                               init_data.visible_rect.origin ().y (),
                               QZ_Z_ORDER_UNDER_APP,
+                              // QZ_Z_ORDER_ABOVE_APP,
                               s->video_width, s->video_height);
   }
   else {

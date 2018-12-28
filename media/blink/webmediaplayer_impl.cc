@@ -79,6 +79,7 @@
 #endif
 
 #include "third_party/nzos/media/nzos_video_decoder.h"
+#include "third_party/nzos/media/nzos_audio_decoder.h"
 
 using blink::WebMediaPlayer;
 using blink::WebRect;
@@ -274,9 +275,7 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
       request_routing_token_cb_(params->request_routing_token_cb()),
       overlay_routing_token_(OverlayInfo::RoutingToken()),
       media_metrics_provider_(params->take_metrics_provider()),
-      drm_scheme_(0),
-      video_decoder_id_(0),
-      audio_decoder_id_(0)  {
+      drm_scheme_(0)  {
   DVLOG(1) << __func__;
   DCHECK(adjust_allocated_memory_cb_);
   DCHECK(renderer_factory_selector_);
@@ -692,15 +691,14 @@ void WebMediaPlayerImpl::Play() {
   UpdatePlayState();
 
 
-  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(video_decoder_id_);
+  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (videoDecoder) {
     videoDecoder->Play(GetPipelineMediaDuration().InSecondsF());
   } else {
-    //TODOSJ
-    // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(audio_decoder_id_);
-    // if (audioDecoder) {
-    //   audioDecoder->Play(GetPipelineDuration());
-    // }
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      audioDecoder->Play(GetPipelineMediaDuration().InSecondsF());
+    }
   }
 }
 
@@ -743,15 +741,14 @@ void WebMediaPlayerImpl::Pause() {
 
   UpdatePlayState();
 
-    media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(video_decoder_id_);
+    media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (videoDecoder) {
     videoDecoder->Pause();
   } else {
-    //TODOSJ
-    // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(audio_decoder_id_);
-    // if (audioDecoder) {
-    //   audioDecoder->Pause();
-    // }
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      audioDecoder->Pause();
+    }
   }
 
 }
@@ -2481,9 +2478,11 @@ std::unique_ptr<Renderer> WebMediaPlayerImpl::CreateRenderer() {
   request_overlay_info_cb = BindToCurrentLoop(
       base::Bind(&WebMediaPlayerImpl::OnOverlayInfoRequested, AsWeakPtr()));
 #endif
+  // NZOS -- using delegate id as stream/renderer id as it appears to 
+  //         exist for the entire life of this object and is likely unique
   return renderer_factory_selector_->GetCurrentFactory()->CreateRenderer(
       media_task_runner_, worker_task_runner_, audio_source_provider_.get(),
-      compositor_.get(), request_overlay_info_cb, client_->TargetColorSpace());
+      compositor_.get(), request_overlay_info_cb, client_->TargetColorSpace(), delegate_id_);
 }
 
 void WebMediaPlayerImpl::StartPipeline() {

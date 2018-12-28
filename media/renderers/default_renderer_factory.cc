@@ -17,8 +17,6 @@
 
 namespace media {
 
-int DefaultRendererFactory::streamId_ = 1;
-
 DefaultRendererFactory::DefaultRendererFactory(
     MediaLog* media_log,
     DecoderFactory* decoder_factory,
@@ -66,7 +64,8 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
     AudioRendererSink* audio_renderer_sink,
     VideoRendererSink* video_renderer_sink,
     const RequestOverlayInfoCB& request_overlay_info_cb,
-    const gfx::ColorSpace& target_color_space) {
+    const gfx::ColorSpace& target_color_space,
+    int streamId) {
   DCHECK(audio_renderer_sink);
 
   std::unique_ptr<AudioRenderer> audio_renderer(new AudioRendererImpl(
@@ -78,7 +77,7 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
       // RendererFactory is owned by WMPI and gets called after WMPI destructor
       // finishes.
       base::Bind(&DefaultRendererFactory::CreateAudioDecoders,
-                 base::Unretained(this), media_task_runner, streamId_),
+                 base::Unretained(this), media_task_runner, streamId),
       media_log_));
 
   GpuVideoAcceleratorFactories* gpu_factories = nullptr;
@@ -103,10 +102,9 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
       // finishes.
       base::Bind(&DefaultRendererFactory::CreateVideoDecoders,
                  base::Unretained(this), media_task_runner,
-                 request_overlay_info_cb, target_color_space, gpu_factories, streamId_),
+                 request_overlay_info_cb, target_color_space, gpu_factories, streamId),
       true, media_log_, std::move(gmb_pool)));
 
-  streamId_++;
   return std::make_unique<RendererImpl>(
       media_task_runner, std::move(audio_renderer), std::move(video_renderer));
 }
