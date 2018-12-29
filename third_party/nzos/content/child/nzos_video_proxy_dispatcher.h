@@ -102,21 +102,13 @@ class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter, media::
   void OnFilterRemoved() override;
   void OnChannelClosing() override; // IPC channel for Send(); must only be accessed on |io_message_loop_|.
 
-  virtual void OnRenderId(const Nz_Proxy_Id& id_data);
-  virtual void OnCapabilities(const Nz_Capabilities& capability_data);
-  virtual void OnClientBandwidth(const Nz_Client_Bandwidth& bandwidth_data);
-  virtual void OnKeyRequest(const Nz_Key_Request& key_request);
-  virtual bool HandleDataMsg(const IPC::Message& message);
-  virtual bool HandleCompleteMsg(const IPC::Message& message);
-  virtual void PostMsg();
-
-  void DestroyOnIOThread(const Nz_Proxy_Id& id_data);
-  void RemoveOnIOThread(const Nz_Proxy_Id& id_data);
-  void RestoreOnIOThread(const Nz_Proxy_Id& id_data);
-  void HiddenOnIOThread(const Nz_Proxy_Id& id_data);
-  void ShownOnIOThread(const Nz_Proxy_Id& id_data);
-  void SeekOnIOThread(const Nz_Proxy_Seek& seek_data);
-  void ScrollVectorOnIOThread(const int X, const int Y);
+  void OnRenderId(const Nz_Proxy_Id& id_data);
+  void OnCapabilities(const Nz_Capabilities& capability_data);
+  void OnClientBandwidth(const Nz_Client_Bandwidth& bandwidth_data);
+  void OnKeyRequest(const Nz_Key_Request& key_request);
+  bool HandleDataMsg(const IPC::Message& message);
+  bool HandleCompleteMsg(const IPC::Message& message);
+  void PostMsg();
 
  public:
   void AudioCreate(const Nz_Proxy_Create& create_data) override;
@@ -125,24 +117,15 @@ class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter, media::
   void AudioVolume(const Nz_Audio_Volume& volume_data) override;
   void AudioDestroy(const Nz_Proxy_Id& id_data) override;
 
-public:
-  virtual void CreateDecryptor(const Nz_Decrypt_Create& create_data);
-  virtual void GenerateKeyRequest(const Nz_Generate_Key_Request& request_data);
-  virtual void UpdateSession(const Nz_Key_Data& key_data);
-  virtual void ReleaseSession(const Nz_Session_Release& session_data);
+  void CreateDecryptor(const Nz_Decrypt_Create& create_data);
+  void GenerateKeyRequest(const Nz_Generate_Key_Request& request_data);
+  void UpdateSession(const Nz_Key_Data& key_data);
+  void ReleaseSession(const Nz_Session_Release& session_data);
 
+  void NzLog(int severity, const std::string& log_msg);
 private:
-  void CreateDecryptorOnIOThread(const Nz_Decrypt_Create& create_data);
-  void GenerateKeyRequestOnIOThread(const Nz_Generate_Key_Request& request_data);
-  void UpdateSessionOnIOThread(const Nz_Key_Data& key_data);
-  void ReleaseSessionOnIOThread(const Nz_Session_Release& session_data);
 
-public:
-  virtual void NzLog(int severity, const std::string& log_msg);
-private:
-  virtual void NzLogOnIOThread(int severity, const std::string& log_msg);
-
-  virtual void OnDeviceProperties(bool allowUserAgentChange, bool isMobileDevice, std::string deviceSw);
+  void OnDeviceProperties(bool allowUserAgentChange, bool isMobileDevice, std::string deviceSw);
 
   double calcDelay(int64_t bits);
 

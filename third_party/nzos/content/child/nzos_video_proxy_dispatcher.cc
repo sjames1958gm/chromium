@@ -101,7 +101,7 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
 
   // Don't capture log only if the switch is present with value "no"
   if (!cmd_line->HasSwitch(switches::kNzCaptureLog) ||
-     (cmd_line->GetSwitchValueASCII(switches::kNzCaptureLog).compare("no") == 0)) {
+     (cmd_line->GetSwitchValueASCII(switches::kNzCaptureLog).compare("no") != 0)) {
     logging::SetLogMessageHandler(NzLogMessageHandlerFunction);
   }
   
@@ -562,21 +562,34 @@ void NzVideoProxyDispatcher::Stop(const Nz_Proxy_Id& id_data) {
 }
 
 void NzVideoProxyDispatcher::Destroy(const Nz_Proxy_Id& id_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::DestroyOnIOThread, this, id_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Destroy";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Destroy(id_data));
+    active_nz_decoders_--;
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Destroy, this, id_data));
+  }
 }
 
 void NzVideoProxyDispatcher::Remove(const Nz_Proxy_Id& id_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::RemoveOnIOThread, this, id_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Remove";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Remove(id_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Remove, this, id_data));
+  }
 }
 
 void NzVideoProxyDispatcher::Restore(const Nz_Proxy_Id& id_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::RestoreOnIOThread, this, id_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Restore";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Restore(id_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Restore, this, id_data));
+  }
 }
 
 void NzVideoProxyDispatcher::Buffer(const Nz_Proxy_Media_Buffer& buffer) {
@@ -590,56 +603,43 @@ void NzVideoProxyDispatcher::Buffer(const Nz_Proxy_Media_Buffer& buffer) {
 }
 
 void NzVideoProxyDispatcher::Hidden(const Nz_Proxy_Id& id_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::HiddenOnIOThread, this, id_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Hidden";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Hidden(id_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Hidden, this, id_data));
+  }
 }
 
 void NzVideoProxyDispatcher::Shown(const Nz_Proxy_Id& id_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::ShownOnIOThread, this, id_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Shown";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Shown(id_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Shown, this, id_data));
+  }
 }
 
 void NzVideoProxyDispatcher::Seek(const Nz_Proxy_Seek& seek_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::SeekOnIOThread, this, seek_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::Seek";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_Seek(seek_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::Seek, this, seek_data));
+  }
 }
 
 void NzVideoProxyDispatcher::ScrollVector(const int X, const int Y) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::ScrollVectorOnIOThread, this, X, Y));
-}
-
-void NzVideoProxyDispatcher::DestroyOnIOThread(const Nz_Proxy_Id& id_data) {
-  LOG(ERROR) << "NzVideoProxyDispatcher::DestroyOnIOThread";
-  Send(new NzVideoProxyHostMsg_Destroy(id_data));
-
-  active_nz_decoders_--;
-}
-
-void NzVideoProxyDispatcher::RemoveOnIOThread(const Nz_Proxy_Id& id_data) {
-  LOG(ERROR) << "NzVideoProxyDispatcher::RemoveOnIOThread";
-  Send(new NzVideoProxyHostMsg_Remove(id_data));
-}
-
-void NzVideoProxyDispatcher::RestoreOnIOThread(const Nz_Proxy_Id& id_data) {
-  LOG(ERROR) << "NzVideoProxyDispatcher::RestoreOnIOThread";
-  Send(new NzVideoProxyHostMsg_Restore(id_data));
-}
-
-void NzVideoProxyDispatcher::HiddenOnIOThread(const Nz_Proxy_Id& id_data) {
-  Send(new NzVideoProxyHostMsg_Hidden(id_data));
-}
-
-void NzVideoProxyDispatcher::ShownOnIOThread(const Nz_Proxy_Id& id_data) {
-  Send(new NzVideoProxyHostMsg_Shown(id_data));
-}
-
-void NzVideoProxyDispatcher::SeekOnIOThread(const Nz_Proxy_Seek& seek_data) {
-  Send(new NzVideoProxyHostMsg_Seek(seek_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::ScrollVector";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_ScrollVector(X, Y));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::ScrollVector, this, X, Y));
+  }
 }
 
 bool NzVideoProxyDispatcher::H264Capable() {
@@ -711,56 +711,46 @@ void NzVideoProxyDispatcher::AudioDestroy(const Nz_Proxy_Id& id_data) {
 // DRM
 ///////////////////
 
-void NzVideoProxyDispatcher::CreateDecryptor(
-    const Nz_Decrypt_Create& create_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE, base::Bind(&NzVideoProxyDispatcher::CreateDecryptorOnIOThread,
-                            this, create_data));
+void NzVideoProxyDispatcher::CreateDecryptor(const Nz_Decrypt_Create& create_data) {
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::CreateDecryptor";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_DecryptorCreate(create_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::CreateDecryptor, this, create_data));
+  }
 }
 
-void NzVideoProxyDispatcher::GenerateKeyRequest(
-    const Nz_Generate_Key_Request& request_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE,
-      base::Bind(&NzVideoProxyDispatcher::GenerateKeyRequestOnIOThread, this,
-                 request_data));
+void NzVideoProxyDispatcher::GenerateKeyRequest(const Nz_Generate_Key_Request& request_data) {
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::GenerateKeyRequest";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_GenerateKeyRequest(request_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::GenerateKeyRequest, this, request_data));
+  }
 }
 
 void NzVideoProxyDispatcher::UpdateSession(const Nz_Key_Data& key_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE, base::Bind(&NzVideoProxyDispatcher::UpdateSessionOnIOThread,
-                            this, key_data));
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::UpdateSession";
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_UpdateSession(key_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::UpdateSession, this, key_data));
+  }
 }
 
 void NzVideoProxyDispatcher::ReleaseSession(
     const Nz_Session_Release& session_data) {
-  ipc_task_runner_->PostTask(
-      FROM_HERE, base::Bind(&NzVideoProxyDispatcher::ReleaseSessionOnIOThread,
-                            this, session_data));
-}
-
-void NzVideoProxyDispatcher::CreateDecryptorOnIOThread(
-    const Nz_Decrypt_Create& create_data) {
-  Send(new NzVideoProxyHostMsg_DecryptorCreate(create_data));
-}
-
-void NzVideoProxyDispatcher::GenerateKeyRequestOnIOThread(
-    const Nz_Generate_Key_Request& request_data) {
-  Send(new NzVideoProxyHostMsg_GenerateKeyRequest(request_data));
-}
-
-void NzVideoProxyDispatcher::UpdateSessionOnIOThread(
-    const Nz_Key_Data& key_data) {
-  Send(new NzVideoProxyHostMsg_UpdateSession(key_data));
-}
-
-void NzVideoProxyDispatcher::ReleaseSessionOnIOThread(
-    const Nz_Session_Release& session_data) {
+  if (ipc_task_runner_->BelongsToCurrentThread()) {
+    LOG(ERROR) << "NzVideoProxyDispatcher::ReleaseSession";
   Send(new NzVideoProxyHostMsg_ReleaseSession(session_data));
-}
-
-void NzVideoProxyDispatcher::ScrollVectorOnIOThread(const int X, const int Y) {
-  Send(new NzVideoProxyHostMsg_ScrollVector(X, Y));
+    content::ChildThreadImpl::current()->Send(new NzVideoProxyHostMsg_ReleaseSession(session_data));
+  } else {
+    ipc_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::ReleaseSession, this, session_data));
+  }
 }
 
 void NzVideoProxyDispatcher::NzLog(int severity, const std::string& log_msg) {
@@ -771,11 +761,6 @@ void NzVideoProxyDispatcher::NzLog(int severity, const std::string& log_msg) {
       ipc_task_runner_->PostTask(
         FROM_HERE, base::BindOnce(&NzVideoProxyDispatcher::NzLog, this, severity, log_msg));
     }
-}
-
-void NzVideoProxyDispatcher::NzLogOnIOThread(int severity,
-                                             const std::string& log_msg) {
-  Send(new NzVideoProxyHostMsg_Log(severity, log_msg));
 }
 
 void NzVideoProxyDispatcher::OnDeviceProperties(bool allowUserAgentChange,
