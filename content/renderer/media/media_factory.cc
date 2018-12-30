@@ -140,14 +140,14 @@ MediaFactory::GetVideoSurfaceLayerMode() {
     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
   }
 
-  if (features::IsMultiProcessMash())
-    return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
+//   if (features::IsMultiProcessMash())
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
 
-  if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideo))
-    return blink::WebMediaPlayer::SurfaceLayerMode::kAlways;
+//   if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideo))
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kAlways;
 
-  if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideoPIP))
-    return blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand;
+//   if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideoPIP))
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand;
 
   return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
 }

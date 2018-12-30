@@ -68,7 +68,7 @@ class MEDIA_EXPORT NZVideoDecoder : public VideoDecoder {
   virtual void SetKeySystem(const blink::WebString& key_system);
   virtual void SetKeySystem(int key_system);
 
-  void SetBoundingRect(gfx::Rect& r, gfx::Size& cb);
+  void SetBoundingRect(const gfx::Rect& rect);
   void Hide();
   void Show();
 

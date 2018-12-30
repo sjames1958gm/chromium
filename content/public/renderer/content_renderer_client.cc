@@ -251,7 +251,9 @@ ContentRendererClient::GetTaskSchedulerInitParams() {
 }
 
 bool ContentRendererClient::IsIdleMediaSuspendEnabled() {
-  return true;
+  // NZOS - don't destroy idle resources for media (decoders)
+  // return true;
+  return false;
 }
 
 bool ContentRendererClient::IsBackgroundMediaSuspendEnabled(

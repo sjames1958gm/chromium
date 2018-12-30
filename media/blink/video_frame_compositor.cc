@@ -280,8 +280,8 @@ bool VideoFrameCompositor::ProcessNewFrame(
     std::move(new_processed_frame_cb_).Run(base::TimeTicks::Now());
 
   return true;
-}
 
+}
 void VideoFrameCompositor::BackgroundRender() {
   DCHECK(task_runner_->BelongsToCurrentThread());
   const base::TimeTicks now = tick_clock_->NowTicks();
@@ -349,5 +349,18 @@ void VideoFrameCompositor::UpdateIsOpaque(bool is_opaque) {
 
   submitter_->SetIsOpaque(is_opaque);
 }
+
+// NZOS -- 
+void VideoFrameCompositor::SetNewRectCB(OnNewRectCB cb_) {
+  new_rect_cb_ = std::move(cb_);
+}
+
+void VideoFrameCompositor::SetNewRect(const gfx::Rect& rect) {
+  LOG(ERROR) << "SJSJ - SetNewRect";
+  if (new_rect_cb_) {
+    new_rect_cb_.Run(rect);
+  }
+}
+
 
 }  // namespace media

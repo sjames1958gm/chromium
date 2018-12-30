@@ -601,6 +601,9 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   // Switch to SurfaceLayer, either initially or from VideoLayer.
   void ActivateSurfaceLayerForVideo();
 
+  // NZOS - send rect changed info to nzos video decoder
+  void OnRectChanged(const gfx::Rect& rect);
+  
   blink::WebLocalFrame* const frame_;
 
   // The playback state last reported to |delegate_|, to avoid setting duplicate

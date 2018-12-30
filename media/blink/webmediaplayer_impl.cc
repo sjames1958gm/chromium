@@ -282,6 +282,9 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
   DCHECK(client_);
   DCHECK(delegate_);
 
+  // NZOS -
+  compositor_->SetNewRectCB(base::Bind(&WebMediaPlayerImpl::OnRectChanged, AsWeakPtr()));
+
   // If we're supposed to force video overlays, then make sure that they're
   // enabled all the time.
   always_enable_overlays_ = base::CommandLine::ForCurrentProcess()->HasSwitch(
@@ -863,6 +866,13 @@ void WebMediaPlayerImpl::SetVolume(double volume) {
   if (watch_time_reporter_)
     watch_time_reporter_->OnVolumeChange(volume);
   delegate_->DidPlayerMutedStatusChange(delegate_id_, volume == 0.0);
+
+  media::NZAudioDecoder* aDecoder =
+                  media::NZAudioDecoder::getNzDecoder(delegate_id_);
+  if (aDecoder) {
+    aDecoder->SetVolume(volume);
+  }
+
 
   // The play state is updated because the player might have left the autoplay
   // muted state.
@@ -1477,6 +1487,7 @@ void WebMediaPlayerImpl::OnPipelineSeeked(bool time_updated) {
 
   media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (decoder) {
+    // TODO - correct seek time
     decoder->OnSeek(seeking_, seek_time_);
   }
 
@@ -1736,16 +1747,18 @@ void WebMediaPlayerImpl::OnMetadata(PipelineMetadata metadata) {
       if (!always_enable_overlays_ && !DoesOverlaySupportMetadata())
         DisableOverlay();
     }
-
+LOG(ERROR) << "SJSJ";
     if (surface_layer_mode_ ==
             blink::WebMediaPlayer::SurfaceLayerMode::kAlways ||
         (surface_layer_mode_ ==
              blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand &&
          client_->DisplayType() ==
              WebMediaPlayer::DisplayType::kPictureInPicture)) {
+LOG(ERROR) << "SJSJ";
       ActivateSurfaceLayerForVideo();
     } else {
       DCHECK(!video_layer_);
+LOG(ERROR) << "SJSJ";
       video_layer_ = cc::VideoLayer::Create(
           compositor_.get(),
           pipeline_metadata_.video_decoder_config.video_rotation());
@@ -3414,5 +3427,14 @@ void WebMediaPlayerImpl::MaybeSetContainerName() {
       static_cast<FFmpegDemuxer*>(demuxer_.get())->container());
 #endif
 }
+
+void WebMediaPlayerImpl::OnRectChanged(const gfx::Rect& rect) {
+  LOG(ERROR) << "SJSJ - SetNewRect";
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    decoder->SetBoundingRect(rect);
+  }
+}
+
 
 }  // namespace media

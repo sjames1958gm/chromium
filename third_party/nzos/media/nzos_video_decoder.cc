@@ -669,8 +669,10 @@ void NZVideoDecoder::WasShown() {
   if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->Shown(id_data);
 }
 
-void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
-  if ((r.width() == 0) || (r.height() == 0))
+void NZVideoDecoder::SetBoundingRect(const gfx::Rect& rect) {
+    LOG(ERROR) << "SJSJ - SetNewRect " << rect.ToString();
+
+  if ((rect.width() == 0) || (rect.height() == 0))
     return;
 
   // bounding_rect_ is the last received bounding rect
@@ -686,48 +688,48 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
   if (!bounding_rect_set_) {
     Nz_Proxy_Bounding_Rect br;
     br.id = id_;
-    br.bounding_rect.SetRect(r.x(), r.y(), r.width(), r.height());
+    br.bounding_rect.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
     if (nzosMediaProxyInterface_) nzosMediaProxyInterface_->BoundingRect(br);
 
-    bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
-    reference_bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
+    bounding_rect_.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
+    reference_bounding_rect_.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
     bounding_rect_set_ = true;
     return;
   }
 
   // Only act if the bounding rect change from the last time.
-  if ((r.x() != bounding_rect_.x()) || (r.y() != bounding_rect_.y()) ||
-      (r.width() != bounding_rect_.width()) ||
-      (r.height() != bounding_rect_.height())) {
-    bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
+  if ((rect.x() != bounding_rect_.x()) || (rect.y() != bounding_rect_.y()) ||
+      (rect.width() != bounding_rect_.width()) ||
+      (rect.height() != bounding_rect_.height())) {
+    bounding_rect_.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
 
     LOG(ERROR) << "NZ: SetBoundingRect (current) : " << id_
               << ", r = " << bounding_rect_.ToString();
     LOG(ERROR) << "NZ: SetBoundingRect (new): " << id_
-              << ", r = " << r.ToString();
+              << ", r = " << rect.ToString();
 
-    int x = r.x();
-    int y = r.y();
-    int width = r.width();
-    int height = r.height();
+    int x = rect.x();
+    int y = rect.y();
+    int width = rect.width();
+    int height = rect.height();
 
     // Reset the reference bounding rect if both width and height change at the
     // same time
-    bool reset = (r.width() != reference_bounding_rect_.width()) &&
-                 (r.height() != reference_bounding_rect_.height());
+    bool reset = (rect.width() != reference_bounding_rect_.width()) &&
+                 (rect.height() != reference_bounding_rect_.height());
 
     if (!reset) {
       // If not reset then adjust the x or y to the hidden edge of the video
       // This allows the client to crop the video, otherwise the video will be
       // squeezed.
       // Y scrolling up off screen
-      if ((y == 0) && (r.height() != reference_bounding_rect_.height())) {
-        y = y - (reference_bounding_rect_.height() - r.height());
+      if ((y == 0) && (rect.height() != reference_bounding_rect_.height())) {
+        y = y - (reference_bounding_rect_.height() - rect.height());
         height = reference_bounding_rect_.height();
       }
       // X scrolling left off screen
-      if ((x == 0) && (r.width() != reference_bounding_rect_.width())) {
-        x = x - (reference_bounding_rect_.width() - r.width());
+      if ((x == 0) && (rect.width() != reference_bounding_rect_.width())) {
+        x = x - (reference_bounding_rect_.width() - rect.width());
         width = reference_bounding_rect_.width();
       }
     }
@@ -743,10 +745,10 @@ void NZVideoDecoder::SetBoundingRect(gfx::Rect& r, gfx::Size& cb) {
     // Reset the reference bounding rect if both width and height change at the
     // same time
     if (reset) {
-      reference_bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
+      reference_bounding_rect_.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
     }
 
-    bounding_rect_.SetRect(r.x(), r.y(), r.width(), r.height());
+    bounding_rect_.SetRect(rect.x(), rect.y(), rect.width(), rect.height());
   }
 }
 
