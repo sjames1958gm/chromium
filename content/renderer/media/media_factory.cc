@@ -140,6 +140,7 @@ MediaFactory::GetVideoSurfaceLayerMode() {
     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
   }
 
+// NZOS - Dont support surface mode for now (for bounding rect)
 //   if (features::IsMultiProcessMash())
 //     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
 

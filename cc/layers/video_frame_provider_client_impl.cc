@@ -53,7 +53,6 @@ void VideoFrameProviderClientImpl::SetActiveVideoLayer(
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(video_layer);
   active_video_layer_ = video_layer;
-  LOG(ERROR) << "SJSJ";
  if (provider_) {
     provider_->SetNewRect(rect);
   }

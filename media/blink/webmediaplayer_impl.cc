@@ -1747,18 +1747,15 @@ void WebMediaPlayerImpl::OnMetadata(PipelineMetadata metadata) {
       if (!always_enable_overlays_ && !DoesOverlaySupportMetadata())
         DisableOverlay();
     }
-LOG(ERROR) << "SJSJ";
     if (surface_layer_mode_ ==
             blink::WebMediaPlayer::SurfaceLayerMode::kAlways ||
         (surface_layer_mode_ ==
              blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand &&
          client_->DisplayType() ==
              WebMediaPlayer::DisplayType::kPictureInPicture)) {
-LOG(ERROR) << "SJSJ";
       ActivateSurfaceLayerForVideo();
     } else {
       DCHECK(!video_layer_);
-LOG(ERROR) << "SJSJ";
       video_layer_ = cc::VideoLayer::Create(
           compositor_.get(),
           pipeline_metadata_.video_decoder_config.video_rotation());
@@ -3429,7 +3426,6 @@ void WebMediaPlayerImpl::MaybeSetContainerName() {
 }
 
 void WebMediaPlayerImpl::OnRectChanged(const gfx::Rect& rect) {
-  LOG(ERROR) << "SJSJ - SetNewRect";
   media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (decoder) {
     decoder->SetBoundingRect(rect);

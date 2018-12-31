@@ -356,7 +356,6 @@ void VideoFrameCompositor::SetNewRectCB(OnNewRectCB cb_) {
 }
 
 void VideoFrameCompositor::SetNewRect(const gfx::Rect& rect) {
-  LOG(ERROR) << "SJSJ - SetNewRect";
   if (new_rect_cb_) {
     new_rect_cb_.Run(rect);
   }

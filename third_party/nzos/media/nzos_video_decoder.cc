@@ -670,8 +670,6 @@ void NZVideoDecoder::WasShown() {
 }
 
 void NZVideoDecoder::SetBoundingRect(const gfx::Rect& rect) {
-    LOG(ERROR) << "SJSJ - SetNewRect " << rect.ToString();
-
   if ((rect.width() == 0) || (rect.height() == 0))
     return;
 

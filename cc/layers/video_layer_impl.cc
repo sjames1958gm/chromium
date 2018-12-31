@@ -53,7 +53,6 @@ VideoLayerImpl::VideoLayerImpl(
       video_rotation_(video_rotation) {
   set_may_contain_video(true);
 
-LOG(ERROR) << "SJSJ";
   // NZOS -- bounding rect of video
   gfx::Rect rect = drawable_content_rect();
   provider_client_impl_->SetActiveVideoLayer(this, rect);
