@@ -3,7 +3,7 @@
 
 #include "third_party/nzos/include/nzos_media_proxy_messages.h"
 
-#define NZ_BUFFER_MEDIA 0
+#define NZ_BUFFER_MEDIA 1
 
 namespace media {
 

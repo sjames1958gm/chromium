@@ -40,8 +40,6 @@ using blink::WebString;
 
 namespace media {
 
-  #define NZ_BUFFER_MEDIA 0
-
 // Convert a WebString to ASCII, falling back on an empty string in the case
 // of a non-ASCII string.
 static std::string ToASCIIOrEmpty(const WebString& string) {

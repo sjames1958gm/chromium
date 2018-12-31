@@ -284,6 +284,7 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
 
   // NZOS -
   compositor_->SetNewRectCB(base::Bind(&WebMediaPlayerImpl::OnRectChanged, AsWeakPtr()));
+  compositor_->SetFrameReadyCB(base::Bind(&WebMediaPlayerImpl::OnFrameReady, AsWeakPtr()));
 
   // If we're supposed to force video overlays, then make sure that they're
   // enabled all the time.
@@ -3429,6 +3430,13 @@ void WebMediaPlayerImpl::OnRectChanged(const gfx::Rect& rect) {
   media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (decoder) {
     decoder->SetBoundingRect(rect);
+  }
+}
+
+void WebMediaPlayerImpl::OnFrameReady(base::TimeDelta timestamp) {
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder (delegate_id_);
+  if (decoder) {
+    decoder->FrameReady(timestamp);
   }
 }
 

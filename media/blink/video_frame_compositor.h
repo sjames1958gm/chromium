@@ -68,6 +68,7 @@ class MEDIA_BLINK_EXPORT VideoFrameCompositor : public VideoRendererSink,
   using OnNewProcessedFrameCB = base::OnceCallback<void(base::TimeTicks)>;
   // NZOS - need new positioning info for frame to send to NzOS client
   using OnNewRectCB = base::RepeatingCallback<void(const gfx::Rect&)>;
+  using OnFrameReadyCB = base::RepeatingCallback<void(base::TimeDelta)>;
 
   // |task_runner| is the task runner on which this class will live,
   // though it may be constructed on any thread.
@@ -163,6 +164,7 @@ class MEDIA_BLINK_EXPORT VideoFrameCompositor : public VideoRendererSink,
   // NZOS - need new positioning info for frame to send to NzOS client
   void SetNewRectCB(OnNewRectCB cb_);
   void SetNewRect(const gfx::Rect& rect) override;
+  void SetFrameReadyCB(OnFrameReadyCB cb_);
 
  private:
   // Ran on the |task_runner_| to initalize |submitter_|;
@@ -214,6 +216,7 @@ class MEDIA_BLINK_EXPORT VideoFrameCompositor : public VideoRendererSink,
 
   // NZOS - need new positioning info for frame to send to NzOS client
   OnNewRectCB new_rect_cb_;
+  OnFrameReadyCB frame_ready_cb_;
 
   // These values are only set and read on the compositor thread.
   cc::VideoFrameProvider::Client* client_;

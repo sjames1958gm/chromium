@@ -603,7 +603,9 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
 
   // NZOS - send rect changed info to nzos video decoder
   void OnRectChanged(const gfx::Rect& rect);
-  
+  // NZOS - send ready frame timestamp to video decoder
+  void OnFrameReady(base::TimeDelta timestamp);
+
   blink::WebLocalFrame* const frame_;
 
   // The playback state last reported to |delegate_|, to avoid setting duplicate

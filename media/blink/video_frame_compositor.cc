@@ -279,6 +279,10 @@ bool VideoFrameCompositor::ProcessNewFrame(
   if (new_processed_frame_cb_)
     std::move(new_processed_frame_cb_).Run(base::TimeTicks::Now());
 
+  if (frame_ready_cb_) {
+    frame_ready_cb_.Run(frame->timestamp());
+  }
+
   return true;
 
 }
@@ -355,11 +359,14 @@ void VideoFrameCompositor::SetNewRectCB(OnNewRectCB cb_) {
   new_rect_cb_ = std::move(cb_);
 }
 
+void VideoFrameCompositor::SetFrameReadyCB(OnFrameReadyCB cb_) {
+  frame_ready_cb_ = std::move(cb_);
+}
+
 void VideoFrameCompositor::SetNewRect(const gfx::Rect& rect) {
   if (new_rect_cb_) {
     new_rect_cb_.Run(rect);
   }
 }
-
 
 }  // namespace media
