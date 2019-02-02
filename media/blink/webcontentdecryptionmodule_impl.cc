@@ -159,4 +159,8 @@ WebContentDecryptionModuleImpl::GetCdmContextRef() {
   return adapter_->GetCdmContextRef();
 }
 
+void WebContentDecryptionModuleImpl::setInstanceId(uint32_t id) {
+  adapter_->SetInstanceId(id);
+}
+
 }  // namespace media

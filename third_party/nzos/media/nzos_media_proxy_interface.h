@@ -40,6 +40,12 @@ namespace media {
     virtual void AudioBuffer(const Nz_Proxy_Media_Buffer&) = 0;
     virtual void AudioDestroy(const Nz_Proxy_Id&) = 0;
 
+    // DRM Interfaces
+    virtual void CreateDecryptor(const Nz_Decrypt_Create& create_data) = 0;
+    virtual void GenerateKeyRequest(const Nz_Generate_Key_Request& request_data) = 0;
+    virtual void UpdateSession(const Nz_Key_Data& key_data) = 0;
+    virtual void ReleaseSession(const Nz_Session_Release& session_data) = 0;
+
   };
 
 }  // namespace media

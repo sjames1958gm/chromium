@@ -34,9 +34,9 @@ const char* EncryptionModeAsString(EncryptionMode mode) {
 std::unique_ptr<DecryptConfig> DecryptConfig::CreateCencConfig(
     const std::string& key_id,
     const std::string& iv,
-    const std::vector<SubsampleEntry>& subsamples) {
+    const std::vector<SubsampleEntry>& subsamples, u_int32_t sessionId) {
   return std::make_unique<DecryptConfig>(EncryptionMode::kCenc, key_id, iv,
-                                         subsamples, base::nullopt);
+                                         subsamples, base::nullopt, sessionId);
 }
 
 // static

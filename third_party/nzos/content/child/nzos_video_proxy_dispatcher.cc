@@ -17,9 +17,10 @@
 #include "media/base/media_switches.h"
 #include "third_party/nzos/media/nzos_video_decoder.h"
 #include "third_party/nzos/media/nzos_audio_decoder.h"
+#include "third_party/nzos/media/nzos_decryptor.h"
+
 
 // TODOSJ
-// #include "nzos/video_proxy/nz_decryptor.h"
 // #include "nzos/video_proxy/nz_wv_decryptor.h"
 
 // Only static functions are available in renderer
@@ -41,6 +42,11 @@ bool NzLogMessageHandlerFunction(int severity,
                                  int line,
                                  size_t message_start,
                                  const std::string& str) {
+#if 1
+  if (str.find("CONSOLE") != std::string::npos) {
+    return true;
+  }
+#endif
   if (NzVideoProxyDispatcher::Instance()) {
     if (str.length() > 1000) {
       std::string repstr = str.substr(0, 999);
@@ -109,6 +115,7 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
 
   media::NZVideoDecoder::SetProxyInterface(this);
   media::NZAudioDecoder::SetProxyInterface(this);
+  media::NzosDecryptor::SetProxyInterface(this);
 
 }
 

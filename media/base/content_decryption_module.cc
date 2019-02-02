@@ -24,6 +24,10 @@ void ContentDecryptionModule::DeleteOnCorrectThread() const {
   delete this;
 }
 
+void ContentDecryptionModule::SetInstanceId(uint32_t id) {
+  instanceId_ = id;
+}
+
 // static
 void ContentDecryptionModuleTraits::Destruct(
     const ContentDecryptionModule* cdm) {

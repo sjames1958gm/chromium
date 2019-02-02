@@ -72,10 +72,13 @@ source_set("nzos_media") {
     "media/nzos_audio_decoder.cc",
     "media/nzos_audio_decoder.h",
     "media/nzos_media_proxy_interface.h",
+    "media/nzos_decryptor.cc",
+    "media/nzos_decryptor.h"
   ]
 
   public_deps = [
     "//base",
     "//skia",
+    "//crypto",
   ]  
 }

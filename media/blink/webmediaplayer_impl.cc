@@ -285,6 +285,7 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
   // NZOS -
   compositor_->SetNewRectCB(base::Bind(&WebMediaPlayerImpl::OnRectChanged, AsWeakPtr()));
   compositor_->SetFrameReadyCB(base::Bind(&WebMediaPlayerImpl::OnFrameReady, AsWeakPtr()));
+  compositor_->SetProviderClientResetCB(base::Bind(&WebMediaPlayerImpl::OnProviderClientReset, AsWeakPtr()));
 
   // If we're supposed to force video overlays, then make sure that they're
   // enabled all the time.
@@ -327,8 +328,11 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
   }
   media_log_->SetStringProperty("surface_layer_mode", surface_layer_mode_name);
 
-  if (params->initial_cdm())
+  if (params->initial_cdm()) {
+    LOG(ERROR) << "SJSJ";
     SetCdm(params->initial_cdm());
+    params->initial_cdm()->setInstanceId(delegate_id_);
+  }
 
   // Report a false "EncrytpedEvent" here as a baseline.
   RecordEncryptedEvent(false);
@@ -1368,7 +1372,8 @@ void WebMediaPlayerImpl::SetContentDecryptionModule(
 
   // For now MediaCapabilities only handles clear content.
   video_decode_stats_reporter_.reset();
-
+  LOG(ERROR) << "SJSJ";
+  cdm->setInstanceId(delegate_id_);
   SetCdm(cdm);
 }
 
@@ -3434,11 +3439,20 @@ void WebMediaPlayerImpl::OnRectChanged(const gfx::Rect& rect) {
 }
 
 void WebMediaPlayerImpl::OnFrameReady(base::TimeDelta timestamp) {
-  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder (delegate_id_);
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
   if (decoder) {
     decoder->FrameReady(timestamp);
   }
 }
 
+void WebMediaPlayerImpl::OnProviderClientReset (bool hasClient) {
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    if (hasClient)
+      decoder->Show();
+    else
+      decoder->Hide();
+  }
+}
 
 }  // namespace media

@@ -108,6 +108,8 @@ class CdmSessionAdapter : public base::RefCounted<CdmSessionAdapter> {
   // Returns a prefix to use for UMAs.
   const std::string& GetKeySystemUMAPrefix() const;
 
+  void SetInstanceId(uint32_t id);
+
  private:
   friend class base::RefCounted<CdmSessionAdapter>;
 

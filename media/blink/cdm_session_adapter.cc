@@ -158,6 +158,10 @@ const std::string& CdmSessionAdapter::GetKeySystemUMAPrefix() const {
   return key_system_uma_prefix_;
 }
 
+void CdmSessionAdapter::SetInstanceId(uint32_t id) {
+  cdm_->SetInstanceId(id);
+}
+
 void CdmSessionAdapter::OnCdmCreated(
     const std::string& key_system,
     base::TimeTicks start_time,

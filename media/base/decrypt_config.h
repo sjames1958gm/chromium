@@ -50,7 +50,7 @@ class MEDIA_EXPORT DecryptConfig {
   static std::unique_ptr<DecryptConfig> CreateCencConfig(
       const std::string& key_id,
       const std::string& iv,
-      const std::vector<SubsampleEntry>& subsamples);
+      const std::vector<SubsampleEntry>& subsamples, uint32_t sessionId = 0);
   static std::unique_ptr<DecryptConfig> CreateCbcsConfig(
       const std::string& key_id,
       const std::string& iv,

@@ -605,6 +605,8 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   void OnRectChanged(const gfx::Rect& rect);
   // NZOS - send ready frame timestamp to video decoder
   void OnFrameReady(base::TimeDelta timestamp);
+  // NZOS - hide / show video based on provider client
+  void OnProviderClientReset (bool hasClient);
 
   blink::WebLocalFrame* const frame_;
 

@@ -167,6 +167,9 @@ class MEDIA_EXPORT ContentDecryptionModule
   // specific thread.
   virtual void DeleteOnCorrectThread() const;
 
+  virtual void SetInstanceId(uint32_t id);
+  uint32_t GetInstanceId() { return instanceId_; }
+
  protected:
   friend class base::RefCountedThreadSafe<ContentDecryptionModule,
                                           ContentDecryptionModuleTraits>;
@@ -175,6 +178,7 @@ class MEDIA_EXPORT ContentDecryptionModule
   virtual ~ContentDecryptionModule();
 
  private:
+ uint32_t instanceId_;
   DISALLOW_COPY_AND_ASSIGN(ContentDecryptionModule);
 };
 

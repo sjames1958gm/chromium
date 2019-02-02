@@ -179,6 +179,7 @@ AesDecryptor::AesDecryptor(
   DCHECK(session_message_cb_);
   DCHECK(session_closed_cb_);
   DCHECK(session_keys_change_cb_);
+  LOG(FATAL) << "SJSJ";
 }
 
 AesDecryptor::~AesDecryptor() {
@@ -564,6 +565,7 @@ bool AesDecryptor::CreateSession(const std::string& session_id,
     return false;
 
   auto result = open_sessions_.emplace(session_id, session_type);
+  LOG(ERROR) << "SJSJ";
   return result.second;
 }
 

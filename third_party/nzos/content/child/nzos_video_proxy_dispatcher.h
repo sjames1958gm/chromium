@@ -117,10 +117,10 @@ class CONTENT_EXPORT NzVideoProxyDispatcher : public IPC::MessageFilter, media::
   void AudioVolume(const Nz_Audio_Volume& volume_data) override;
   void AudioDestroy(const Nz_Proxy_Id& id_data) override;
 
-  void CreateDecryptor(const Nz_Decrypt_Create& create_data);
-  void GenerateKeyRequest(const Nz_Generate_Key_Request& request_data);
-  void UpdateSession(const Nz_Key_Data& key_data);
-  void ReleaseSession(const Nz_Session_Release& session_data);
+  void CreateDecryptor(const Nz_Decrypt_Create& create_data) override;
+  void GenerateKeyRequest(const Nz_Generate_Key_Request& request_data) override;
+  void UpdateSession(const Nz_Key_Data& key_data) override;
+  void ReleaseSession(const Nz_Session_Release& session_data) override;
 
   void NzLog(int severity, const std::string& log_msg);
 private:

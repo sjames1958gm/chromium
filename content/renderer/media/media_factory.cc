@@ -379,6 +379,7 @@ blink::WebMediaPlayer* MediaFactory::CreateMediaPlayer(
 }
 
 blink::WebEncryptedMediaClient* MediaFactory::EncryptedMediaClient() {
+    LOG(FATAL) << "SJSJ";
   if (!web_encrypted_media_client_) {
     web_encrypted_media_client_.reset(new media::WebEncryptedMediaClientImpl(
         GetCdmFactory(), render_frame_->GetMediaPermission()));
@@ -608,8 +609,10 @@ media::mojom::RemoterFactory* MediaFactory::GetRemoterFactory() {
 #endif
 
 media::CdmFactory* MediaFactory::GetCdmFactory() {
+    LOG(FATAL) << "SJSJ";
   if (cdm_factory_)
     return cdm_factory_.get();
+    LOG(ERROR) << "SJSJ";
 
 #if BUILDFLAG(ENABLE_MOJO_CDM)
   cdm_factory_.reset(new media::MojoCdmFactory(GetMediaInterfaceFactory()));
