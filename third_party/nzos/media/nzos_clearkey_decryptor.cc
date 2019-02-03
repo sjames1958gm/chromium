@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "third_party/nzos/media/nzos_decryptor.h"
+#include "third_party/nzos/media/nzos_clearkey_decryptor.h"
 
 
 #include <stddef.h>
@@ -34,13 +34,13 @@
 
 namespace media {
 
-int NzosDecryptor::ids = 1;
-std::map<int, NzosDecryptor*> NzosDecryptor::nz_decryptors_;
-NzosMediaProxyInterface* NzosDecryptor::proxyInterface;
+int NzosClearKeyDecryptor::ids = 1;
+std::map<int, NzosClearKeyDecryptor*> NzosClearKeyDecryptor::nz_decryptors_;
+NzosMediaProxyInterface* NzosClearKeyDecryptor::proxyInterface;
 
-NzosDecryptor* NzosDecryptor::getNzosDecryptor (int id) {
+NzosClearKeyDecryptor* NzosClearKeyDecryptor::getDecryptor (int id) {
 
-  std::map<int, NzosDecryptor*>::iterator it = nz_decryptors_.find (id);
+  std::map<int, NzosClearKeyDecryptor*>::iterator it = nz_decryptors_.find (id);
 
   if (it != nz_decryptors_.end ()) {
     return it->second;
@@ -50,7 +50,7 @@ NzosDecryptor* NzosDecryptor::getNzosDecryptor (int id) {
 }
 
 // static
-void NzosDecryptor::SetProxyInterface(NzosMediaProxyInterface* inst) {
+void NzosClearKeyDecryptor::SetProxyInterface(NzosMediaProxyInterface* inst) {
   LOG(ERROR) << "SetProxyInterface";
   proxyInterface = inst;
 }
@@ -58,7 +58,7 @@ void NzosDecryptor::SetProxyInterface(NzosMediaProxyInterface* inst) {
 // Keeps track of the session IDs and DecryptionKeys. The keys are ordered by
 // insertion time (last insertion is first). It takes ownership of the
 // DecryptionKeys.
-class NzosDecryptor::SessionIdDecryptionKeyMap {
+class NzosClearKeyDecryptor::SessionIdDecryptionKeyMap {
   // Use a std::list to actually hold the data. Insertion is always done
   // at the front, so the "latest" decryption key is always the first one
   // in the list.
@@ -104,7 +104,7 @@ class NzosDecryptor::SessionIdDecryptionKeyMap {
     DISALLOW_COPY_AND_ASSIGN(SessionIdDecryptionKeyMap);
 };
 
-void NzosDecryptor::SessionIdDecryptionKeyMap::Insert(
+void NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::Insert(
     const std::string& session_id,
     std::unique_ptr<DecryptionKey> decryption_key) {
   auto it = Find (session_id);
@@ -113,7 +113,7 @@ void NzosDecryptor::SessionIdDecryptionKeyMap::Insert(
   key_list_.push_front (std::make_pair (session_id, std::move(decryption_key)));
 }
 
-void NzosDecryptor::SessionIdDecryptionKeyMap::Erase (
+void NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::Erase (
     const std::string& session_id) {
   auto it = Find (session_id);
   if (it == key_list_.end ())
@@ -121,8 +121,8 @@ void NzosDecryptor::SessionIdDecryptionKeyMap::Erase (
   Erase (it);
 }
 
-NzosDecryptor::SessionIdDecryptionKeyMap::KeyList::iterator
-NzosDecryptor::SessionIdDecryptionKeyMap::Find (const std::string& session_id) {
+NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::KeyList::iterator
+NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::Find (const std::string& session_id) {
   for (auto it = key_list_.begin (); it != key_list_.end (); ++it) {
     if (it->first == session_id)
       return it;
@@ -130,13 +130,13 @@ NzosDecryptor::SessionIdDecryptionKeyMap::Find (const std::string& session_id) {
   return key_list_.end ();
 }
 
-void NzosDecryptor::SessionIdDecryptionKeyMap::Erase (
+void NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::Erase (
     KeyList::iterator position) {
   DCHECK(position->second);
   key_list_.erase (position);
 }
 
-uint32_t NzosDecryptor::next_session_id_ = 1;
+uint32_t NzosClearKeyDecryptor::next_session_id_ = 1;
 
 // enum ClearBytesBufferSel {
 //   kSrcContainsClearBytes,
@@ -284,7 +284,7 @@ static scoped_refptr<DecoderBuffer> DecryptDataNz (const DecoderBuffer& input,
   return output;
 }
 
-NzosDecryptor::NzosDecryptor (const SessionMessageCB& session_message_cb,
+NzosClearKeyDecryptor::NzosClearKeyDecryptor (const SessionMessageCB& session_message_cb,
                           const SessionClosedCB& session_closed_cb,
                           const SessionKeysChangeCB& session_keys_change_cb,
                           const SessionExpirationUpdateCB& session_expiration_update_cb) :
@@ -298,13 +298,13 @@ NzosDecryptor::NzosDecryptor (const SessionMessageCB& session_message_cb,
   DCHECK(!session_keys_change_cb_.is_null());
   DCHECK(!session_expiration_update_cb.is_null());
 
-  LOG(INFO) << "NzosDecryptor Construct: ";
+  LOG(INFO) << "NzosClearKeyDecryptor Construct: ";
 
 }
 
-NzosDecryptor::~NzosDecryptor () {
+NzosClearKeyDecryptor::~NzosClearKeyDecryptor () {
   key_map_.clear ();
-  LOG(INFO) << "NzosDecryptor Destruct: " << GetInstanceId();
+  LOG(INFO) << "NzosClearKeyDecryptor Destruct: " << GetInstanceId();
 
   Nz_Session_Release session_data;
   session_data.id = GetInstanceId();
@@ -314,25 +314,30 @@ NzosDecryptor::~NzosDecryptor () {
 
 }
 
-bool NzosDecryptor::NzosAesCapable () {
+bool NzosClearKeyDecryptor::NzosAesCapable () {
+  // TODOSJ: Hook this in to Mojo
   LOG(FATAL) << "SJSJ - NzosAesCapable";
   return false;
   // TODOSJ
   // return content::NzVideoProxyDispatcher::Instance ()->ClearkeyCapable ();
 }
 
-void NzosDecryptor::SetServerCertificate (
+void NzosClearKeyDecryptor::SetServerCertificate (
       const std::vector<uint8_t>& certificate,
       std::unique_ptr<SimpleCdmPromise> promise) {
   promise->reject (CdmPromise::Exception::NOT_SUPPORTED_ERROR, 0,
                    "SetServerCertificate() is not supported.");
 }
 
-void NzosDecryptor::CreateSessionAndGenerateRequest (
+void NzosClearKeyDecryptor::CreateSessionAndGenerateRequest (
         CdmSessionType session_type,
         EmeInitDataType init_data_type,
         const std::vector<uint8_t>& init_data,
         std::unique_ptr<NewSessionCdmPromise> promise) {
+
+  // TODOSJ: How to resolve late instance Id
+  SetInstanceId(++next_session_id_);
+  SendCreate(GetInstanceId());
 
   std::string web_session_id (base::UintToString (next_session_id_));
   int session_id = GetInstanceId() + next_session_id_++;
@@ -387,15 +392,16 @@ void NzosDecryptor::CreateSessionAndGenerateRequest (
   request_data.id = GetInstanceId();
   request_data.key_rqst_id = session_id;
   request_data.scheme = e_QzPropertyDrmScheme_ClearKey;
-  if (init_data.size ())
+  if (init_data.size ()) {
     request_data.init_data = message;
+  }
 
   LOG(INFO) << "CreateSession: " << session_id;
   proxyInterface->GenerateKeyRequest(request_data);
 }
 
 // This is invoked with the response from the nzos client
-void NzosDecryptor::KeyRequest (uint32_t sessionId,
+void NzosClearKeyDecryptor::KeyRequest (uint32_t sessionId,
                               uint32_t keyRqstId,
                               std::vector<uint8_t> opaque_data,
                               std::string url) {
@@ -424,7 +430,7 @@ void NzosDecryptor::KeyRequest (uint32_t sessionId,
 }
 
 void
-NzosDecryptor::LoadSession (CdmSessionType session_type, 
+NzosClearKeyDecryptor::LoadSession (CdmSessionType session_type, 
                       const std::string& web_session_id,
                       std::unique_ptr<NewSessionCdmPromise> promise) {
   // TODO(xhwang): Change this to NOTREACHED() when blink checks for key systems
@@ -432,7 +438,7 @@ NzosDecryptor::LoadSession (CdmSessionType session_type,
   promise->reject (CdmPromise::Exception::NOT_SUPPORTED_ERROR, 0, "LoadSession() is not supported.");
 }
 
-void NzosDecryptor::UpdateSession (const std::string& session_id,
+void NzosClearKeyDecryptor::UpdateSession (const std::string& session_id,
                         const std::vector<uint8_t>& response,
                         std::unique_ptr<SimpleCdmPromise> promise) {
   CHECK(!response.empty ());
@@ -519,7 +525,7 @@ void NzosDecryptor::UpdateSession (const std::string& session_id,
 
 }
 
-void NzosDecryptor::CloseSession (const std::string& web_session_id,
+void NzosClearKeyDecryptor::CloseSession (const std::string& web_session_id,
                        std::unique_ptr<SimpleCdmPromise> promise) {
   // Validate that this is a reference to an active session and then forget it.
   auto it = open_sessions_.find(web_session_id);
@@ -538,7 +544,7 @@ void NzosDecryptor::CloseSession (const std::string& web_session_id,
   session_closed_cb_.Run (web_session_id);
 }
 
-void NzosDecryptor::RemoveSession (const std::string& web_session_id,
+void NzosClearKeyDecryptor::RemoveSession (const std::string& web_session_id,
                         std::unique_ptr<SimpleCdmPromise> promise) {
   // AesDecryptor doesn't keep any persistent data, so this should be
   // NOT_REACHED().
@@ -557,25 +563,25 @@ void NzosDecryptor::RemoveSession (const std::string& web_session_id,
   promise->reject (CdmPromise::Exception::QUOTA_EXCEEDED_ERROR, 0, "Session does not exist.");
 }
 
-CdmContext* NzosDecryptor::GetCdmContext () {
+CdmContext* NzosClearKeyDecryptor::GetCdmContext () {
   return this;
 }
 
-std::unique_ptr<CallbackRegistration> NzosDecryptor::RegisterNewKeyCB(
+std::unique_ptr<CallbackRegistration> NzosClearKeyDecryptor::RegisterNewKeyCB(
     base::RepeatingClosure new_key_cb) {
   NOTIMPLEMENTED();
   return nullptr;
 }
 
-Decryptor* NzosDecryptor::GetDecryptor () {
+Decryptor* NzosClearKeyDecryptor::GetDecryptor () {
   return this;
 }
 
-int NzosDecryptor::GetCdmId() const {
+int NzosClearKeyDecryptor::GetCdmId() const {
   return kInvalidCdmId;
 }
 
-void NzosDecryptor::RegisterNewKeyCB (StreamType stream_type,
+void NzosClearKeyDecryptor::RegisterNewKeyCB (StreamType stream_type,
                                const NewKeyCB& new_key_cb) {
   base::AutoLock auto_lock (new_key_cb_lock_);
 
@@ -593,7 +599,7 @@ void NzosDecryptor::RegisterNewKeyCB (StreamType stream_type,
   }
 }
 
-void NzosDecryptor::Decrypt (StreamType stream_type,
+void NzosClearKeyDecryptor::Decrypt (StreamType stream_type,
                       const scoped_refptr<DecoderBuffer> encrypted,
                       const DecryptCB& decrypt_cb) {
   CHECK(encrypted->decrypt_config ());
@@ -626,62 +632,64 @@ void NzosDecryptor::Decrypt (StreamType stream_type,
   decrypt_cb.Run (kSuccess, decrypted);
 }
 
-void NzosDecryptor::CancelDecrypt (StreamType stream_type) {
+void NzosClearKeyDecryptor::CancelDecrypt (StreamType stream_type) {
   // Decrypt() calls the DecryptCB synchronously so there's nothing to cancel.
   // TODO: This is likely not true for nzos.
 }
 
-void NzosDecryptor::InitializeAudioDecoder (const AudioDecoderConfig& config,
+void NzosClearKeyDecryptor::InitializeAudioDecoder (const AudioDecoderConfig& config,
                                      const DecoderInitCB& init_cb) {
-  // NzosDecryptor does not support audio decoding.
+  // NzosClearKeyDecryptor does not support audio decoding.
   init_cb.Run (false);
 }
 
-void NzosDecryptor::InitializeVideoDecoder (const VideoDecoderConfig& config,
+void NzosClearKeyDecryptor::InitializeVideoDecoder (const VideoDecoderConfig& config,
                                      const DecoderInitCB& init_cb) {
-  // NzosDecryptor does not support video decoding.
+  // NzosClearKeyDecryptor does not support video decoding.
   init_cb.Run (false);
 }
 
-void NzosDecryptor::DecryptAndDecodeAudio (
+void NzosClearKeyDecryptor::DecryptAndDecodeAudio (
     const scoped_refptr<DecoderBuffer> encrypted,
     const AudioDecodeCB& audio_decode_cb) {
-  NOTREACHED() << "NzosDecryptor does not support audio decoding";
+  NOTREACHED() << "NzosClearKeyDecryptor does not support audio decoding";
 }
 
 void
-NzosDecryptor::DecryptAndDecodeVideo (
+NzosClearKeyDecryptor::DecryptAndDecodeVideo (
     const scoped_refptr<DecoderBuffer> encrypted,
     const VideoDecodeCB& video_decode_cb) {
-  NOTREACHED() << "NzosDecryptor does not support video decoding";
+  NOTREACHED() << "NzosClearKeyDecryptor does not support video decoding";
 }
 
-void NzosDecryptor::ResetDecoder (StreamType stream_type) {
-  NOTREACHED() << "NzosDecryptor does not support audio/video decoding";
+void NzosClearKeyDecryptor::ResetDecoder (StreamType stream_type) {
+  NOTREACHED() << "NzosClearKeyDecryptor does not support audio/video decoding";
 }
 
-void NzosDecryptor::DeinitializeDecoder (StreamType stream_type) {
-  NOTREACHED() << "NzosDecryptor does not support audio/video decoding";
+void NzosClearKeyDecryptor::DeinitializeDecoder (StreamType stream_type) {
+  NOTREACHED() << "NzosClearKeyDecryptor does not support audio/video decoding";
 }
 
-int NzosDecryptor::GetDrmScheme () {
+int NzosClearKeyDecryptor::GetDrmScheme () {
   return e_QzPropertyDrmScheme_ClearKey;
 }
 
-void NzosDecryptor::SetInstanceId(uint32_t id) {
+void NzosClearKeyDecryptor::SetInstanceId(uint32_t id) {
   ContentDecryptionModule::SetInstanceId(id);
 
   nz_decryptors_[id] = this;
 
+}
+
+void NzosClearKeyDecryptor::SendCreate(uint32_t id) {
   Nz_Decrypt_Create create_data;
   create_data.id = id;
   create_data.scheme = e_QzPropertyDrmScheme_ClearKey;
 
   proxyInterface->CreateDecryptor(create_data);
-
 }
 
-bool NzosDecryptor::AddDecryptionKey (const std::string& session_id,
+bool NzosClearKeyDecryptor::AddDecryptionKey (const std::string& session_id,
                                const std::string& key_id,
                                const std::string& key_string) {
   std::unique_ptr<DecryptionKey> decryption_key(new DecryptionKey(key_string));
@@ -705,7 +713,7 @@ bool NzosDecryptor::AddDecryptionKey (const std::string& session_id,
   return true;
 }
 
-NzosDecryptor::DecryptionKey* NzosDecryptor::GetKey_Locked(
+NzosClearKeyDecryptor::DecryptionKey* NzosClearKeyDecryptor::GetKey_Locked(
     const std::string& key_id) const {
   key_map_lock_.AssertAcquired();
   auto key_id_found = key_map_.find(key_id);
@@ -716,7 +724,7 @@ NzosDecryptor::DecryptionKey* NzosDecryptor::GetKey_Locked(
   return key_id_found->second->LatestDecryptionKey();
 }
 
-bool NzosDecryptor::HasKey(const std::string& session_id,
+bool NzosClearKeyDecryptor::HasKey(const std::string& session_id,
                           const std::string& key_id) {
   base::AutoLock auto_lock(key_map_lock_);
   KeyIdToSessionKeysMap::const_iterator key_id_found = key_map_.find(key_id);
@@ -726,7 +734,7 @@ bool NzosDecryptor::HasKey(const std::string& session_id,
   return key_id_found->second->Contains(session_id);
 }
 
-void NzosDecryptor::DeleteKeysForSession (const std::string& session_id) {
+void NzosClearKeyDecryptor::DeleteKeysForSession (const std::string& session_id) {
   base::AutoLock auto_lock(key_map_lock_);
 
   // Remove all keys associated with |session_id|. Since the data is
@@ -747,14 +755,14 @@ void NzosDecryptor::DeleteKeysForSession (const std::string& session_id) {
   }
 }
 
-NzosDecryptor::DecryptionKey::DecryptionKey (const std::string& secret) :
+NzosClearKeyDecryptor::DecryptionKey::DecryptionKey (const std::string& secret) :
     secret_ (secret) {
 }
 
-NzosDecryptor::DecryptionKey::~DecryptionKey () {
+NzosClearKeyDecryptor::DecryptionKey::~DecryptionKey () {
 }
 
-bool NzosDecryptor::DecryptionKey::Init () {
+bool NzosClearKeyDecryptor::DecryptionKey::Init () {
   CHECK(!secret_.empty ());
   decryption_key_ =
       crypto::SymmetricKey::Import(crypto::SymmetricKey::AES, secret_);
@@ -763,7 +771,7 @@ bool NzosDecryptor::DecryptionKey::Init () {
   return true;
 }
 
-CdmKeysInfo NzosDecryptor::GenerateKeysInfoList(
+CdmKeysInfo NzosClearKeyDecryptor::GenerateKeysInfoList(
     const std::string& session_id,
     CdmKeyInformation::KeyStatus status) {
   // Create the list of all available keys for this session.

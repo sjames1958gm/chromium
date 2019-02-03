@@ -34,21 +34,21 @@ namespace media {
 
 // Decrypts an AES encrypted buffer into an unencrypted buffer. The AES
 // encryption must be CTR with a key size of 128bits.
-  class MEDIA_EXPORT NzosDecryptor : public ContentDecryptionModule,
+  class MEDIA_EXPORT NzosClearKeyDecryptor : public ContentDecryptionModule,
                                      public CdmContext,
                                      public Decryptor {
   public:
-    NzosDecryptor (const SessionMessageCB& session_message_cb,
+    NzosClearKeyDecryptor (const SessionMessageCB& session_message_cb,
                    const SessionClosedCB& session_closed_cb,
                    const SessionKeysChangeCB& session_keys_change_cb,
                    const SessionExpirationUpdateCB& session_expiration_update_cb);
-    ~NzosDecryptor () override;
+    ~NzosClearKeyDecryptor () override;
 
     // NzOS specific
     static void SetProxyInterface(NzosMediaProxyInterface* inst);
 
     static bool NzosAesCapable ();
-    static NzosDecryptor* getNzosDecryptor (int id);
+    static NzosClearKeyDecryptor* getDecryptor (int id);
     static uint32_t SessionIdFromKeyId (const std::string& key_id);
     void KeyRequest (uint32_t sessionId, uint32_t keyRqstId,
                      std::vector<uint8_t> opaque_data, std::string url);
@@ -101,6 +101,8 @@ namespace media {
     int GetDrmScheme () override;
 
     void SetInstanceId(uint32_t id) override;
+    void SendCreate(uint32_t id);
+
 
   private:
     // TODO(fgalligan): Remove this and change KeyMap to use crypto::SymmetricKey
@@ -191,10 +193,10 @@ namespace media {
     // CdmPromiseAdapter cdm_promise_adapter_;
     PromiseMap promises_;
 
-    static std::map<int, NzosDecryptor*> nz_decryptors_;
+    static std::map<int, NzosClearKeyDecryptor*> nz_decryptors_;
     static NzosMediaProxyInterface* proxyInterface;
 
-    DISALLOW_COPY_AND_ASSIGN(NzosDecryptor);
+    DISALLOW_COPY_AND_ASSIGN(NzosClearKeyDecryptor);
   };
 
 }  // namespace media

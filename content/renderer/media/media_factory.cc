@@ -610,9 +610,10 @@ media::mojom::RemoterFactory* MediaFactory::GetRemoterFactory() {
 
 media::CdmFactory* MediaFactory::GetCdmFactory() {
     LOG(FATAL) << "SJSJ";
-  if (cdm_factory_)
+  if (cdm_factory_) {
     return cdm_factory_.get();
-    LOG(ERROR) << "SJSJ";
+  }
+  LOG(ERROR) << "SJSJ";
 
 #if BUILDFLAG(ENABLE_MOJO_CDM)
   cdm_factory_.reset(new media::MojoCdmFactory(GetMediaInterfaceFactory()));

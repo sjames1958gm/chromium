@@ -17,7 +17,7 @@
 #include "media/base/media_switches.h"
 #include "third_party/nzos/media/nzos_video_decoder.h"
 #include "third_party/nzos/media/nzos_audio_decoder.h"
-#include "third_party/nzos/media/nzos_decryptor.h"
+#include "third_party/nzos/media/nzos_clearkey_decryptor.h"
 
 
 // TODOSJ
@@ -42,7 +42,7 @@ bool NzLogMessageHandlerFunction(int severity,
                                  int line,
                                  size_t message_start,
                                  const std::string& str) {
-#if 1
+#if 0
   if (str.find("CONSOLE") != std::string::npos) {
     return true;
   }
@@ -115,7 +115,7 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
 
   media::NZVideoDecoder::SetProxyInterface(this);
   media::NZAudioDecoder::SetProxyInterface(this);
-  media::NzosDecryptor::SetProxyInterface(this);
+  media::NzosClearKeyDecryptor::SetProxyInterface(this);
 
 }
 
@@ -213,13 +213,14 @@ void NzVideoProxyDispatcher::OnClientBandwidth(
   target_bw_ = bandwidth_data.bandwidth;
 }
 void NzVideoProxyDispatcher::OnKeyRequest(const Nz_Key_Request& key_request) {
-/* TODOSJ
-        media::NzDecryptor* decryptor = media::NzDecryptor::getNzDecryptor(
+
+        media::NzosClearKeyDecryptor* decryptor = media::NzosClearKeyDecryptor::getDecryptor(
                         key_request.id);
         if (decryptor) {
                 return decryptor->KeyRequest(key_request.id,
 key_request.key_rqst_id, key_request.opaque_data, key_request.url);
         }
+        /*
         media::NzWvDecryptor* wv_decryptor =
 media::NzWvDecryptor::getNzWvDecryptor( key_request.id); if (wv_decryptor) {
                 return wv_decryptor->KeyRequest(key_request.id,
