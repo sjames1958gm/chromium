@@ -163,8 +163,6 @@ class MEDIA_EXPORT CdmAdapter : public ContentDecryptionModule,
   // cdm::Host_11 specific implementation.
   cdm::CdmProxy* RequestCdmProxy(cdm::CdmProxyClient* client) override;
 
-  int GetDrmScheme() override;
-
  private:
   CdmAdapter(const std::string& key_system,
              const url::Origin& security_origin,

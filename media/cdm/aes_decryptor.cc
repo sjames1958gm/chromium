@@ -179,7 +179,6 @@ AesDecryptor::AesDecryptor(
   DCHECK(session_message_cb_);
   DCHECK(session_closed_cb_);
   DCHECK(session_keys_change_cb_);
-  LOG(FATAL) << "SJSJ";
 }
 
 AesDecryptor::~AesDecryptor() {
@@ -554,10 +553,6 @@ void AesDecryptor::DeinitializeDecoder(StreamType stream_type) {
   // nothing to be done here.
 }
 
-int AesDecryptor::GetDrmScheme() {
-  return 0;
-}
-
 bool AesDecryptor::CreateSession(const std::string& session_id,
                                  CdmSessionType session_type) {
   auto it = open_sessions_.find(session_id);
@@ -565,7 +560,6 @@ bool AesDecryptor::CreateSession(const std::string& session_id,
     return false;
 
   auto result = open_sessions_.emplace(session_id, session_type);
-  LOG(ERROR) << "SJSJ";
   return result.second;
 }
 

@@ -214,12 +214,14 @@ void NzVideoProxyDispatcher::OnClientBandwidth(
 }
 void NzVideoProxyDispatcher::OnKeyRequest(const Nz_Key_Request& key_request) {
 
-        media::NzosClearKeyDecryptor* decryptor = media::NzosClearKeyDecryptor::getDecryptor(
-                        key_request.id);
-        if (decryptor) {
-                return decryptor->KeyRequest(key_request.id,
+    LOG(ERROR) << "OnKeyRequest: " << key_request.id;
+
+    media::NzosClearKeyDecryptor* decryptor = media::NzosClearKeyDecryptor::getDecryptor(
+                    key_request.id);
+    if (decryptor) {
+            return decryptor->KeyRequest(key_request.id,
 key_request.key_rqst_id, key_request.opaque_data, key_request.url);
-        }
+    }
         /*
         media::NzWvDecryptor* wv_decryptor =
 media::NzWvDecryptor::getNzWvDecryptor( key_request.id); if (wv_decryptor) {
@@ -227,6 +229,7 @@ media::NzWvDecryptor::getNzWvDecryptor( key_request.id); if (wv_decryptor) {
 key_request.key_rqst_id, key_request.opaque_data, key_request.url);
         }
 */
+    LOG(ERROR) << "OnKeyRequest: Decryptor instance not found";
 }
 bool NzVideoProxyDispatcher::HandleDataMsg(const IPC::Message& message) {
   bool handled = false;

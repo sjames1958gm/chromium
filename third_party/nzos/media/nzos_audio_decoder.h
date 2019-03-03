@@ -67,7 +67,7 @@ class MEDIA_EXPORT NZAudioDecoder : public AudioDecoder {
 
   void SetKeySystem(const blink::WebString& key_system);
   virtual void SetKeySystem(int key_system);
-
+  
   static NZAudioDecoder* Create(const scoped_refptr<base::SingleThreadTaskRunner>& task_runner);
   static NZAudioDecoder* getNzDecoder(int id);
   static bool IsEnabled();

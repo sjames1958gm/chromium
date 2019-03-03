@@ -92,10 +92,6 @@ void DefaultDecoderFactory::CreateVideoDecoders(
     const gfx::ColorSpace& target_color_space,
     std::vector<std::unique_ptr<VideoDecoder>>* video_decoders,
     int streamId) {
-#if !defined(OS_ANDROID)
-  video_decoders->push_back(
-      std::make_unique<DecryptingVideoDecoder>(task_runner, media_log));
-#endif
 
   if (NZVideoDecoder::IsEnabled() && (!nz_use_browser_decoder_)) {
     
@@ -106,6 +102,11 @@ void DefaultDecoderFactory::CreateVideoDecoders(
 
     video_decoders->push_back(std::move(vd));
   } 
+  
+#if !defined(OS_ANDROID)
+  video_decoders->push_back(
+      std::make_unique<DecryptingVideoDecoder>(task_runner, media_log));
+#endif
 
   // Perfer an external decoder since one will only exist if it is hardware
   // accelerated.

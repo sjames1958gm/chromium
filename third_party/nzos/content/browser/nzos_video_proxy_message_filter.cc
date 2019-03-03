@@ -233,6 +233,9 @@ bool NzVideoProxyMessageFilter::OnKeyMessageReceivedS (uint32_t u32SessionId,
     inst->OnKeyMessageReceived (u32SessionId, u32KeyRqstId, pOpaqueData,
                                 u32OpaqueDataLen, url, u32UrlLen);
   }
+  else {
+    LOG(ERROR) << "failed to find DRM Session";
+  }
 
   return result;
 }

@@ -98,11 +98,10 @@ namespace media {
     void ResetDecoder (StreamType stream_type) override;
     void DeinitializeDecoder (StreamType stream_type) override;
 
-    int GetDrmScheme () override;
-
     void SetInstanceId(uint32_t id) override;
-    void SendCreate(uint32_t id);
 
+    void SendCreate(int id);
+    bool CreateSession(const std::string& session_id, CdmSessionType session_type);
 
   private:
     // TODO(fgalligan): Remove this and change KeyMap to use crypto::SymmetricKey
@@ -176,11 +175,13 @@ namespace media {
     // uses this class to also support persistent sessions, so save the
     // CdmSessionType for each session.
     std::map<std::string, CdmSessionType> open_sessions_;
+    
     CdmPromiseAdapter cdm_promise_adapter_;
 
     // Make web session ID unique per renderer by making it static. Web session
     // IDs seen by the app will be "1", "2", etc.
-    static uint32_t next_session_id_;
+    static int nextKeyRequestId;
+    static int nextSessionId;
     static int ids;
 
     mutable base::Lock new_key_cb_lock_;
@@ -188,10 +189,15 @@ namespace media {
     NewKeyCB new_video_key_cb_ GUARDED_BY(new_key_cb_lock_);
 
     using PromiseMap = std::unordered_map<uint32_t, uint32_t>;
+    using KeyRequestMap = std::unordered_map<int, int>;
 
     // Storage for promises from invocation to response from client.
     // CdmPromiseAdapter cdm_promise_adapter_;
     PromiseMap promises_;
+    KeyRequestMap keyRequests_;
+
+    int id_;
+    std::string sId_;
 
     static std::map<int, NzosClearKeyDecryptor*> nz_decryptors_;
     static NzosMediaProxyInterface* proxyInterface;

@@ -53,7 +53,6 @@ void MojoCdmFactory::Create(
 // testing. See http://crbug.com/441957
 #if !BUILDFLAG(ENABLE_MOJO_RENDERER)
   if (CanUseAesDecryptor(key_system)) {
-    LOG(FATAL) << "SJSJ";
     scoped_refptr<ContentDecryptionModule> cdm(
         new NzosClearKeyDecryptor(session_message_cb, session_closed_cb,
                          session_keys_change_cb, session_expiration_update_cb));

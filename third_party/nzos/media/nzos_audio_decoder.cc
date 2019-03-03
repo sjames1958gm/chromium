@@ -465,7 +465,6 @@ void NZAudioDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer, co
       data->id = id_;
       data->timestamp = buffer->timestamp().InMicroseconds();
       data->encrypted = false;
-      data->decrypt_scheme = decryptScheme_;
 
       uint32_t remove_adts = 0;
       if (config_.codec() == kCodecAAC) {
@@ -484,6 +483,8 @@ void NZAudioDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer, co
         VLOG(1) << "Encrypted buffer " << buffer->AsHumanReadableString();
         data->encrypted = true;
         const media::DecryptConfig* config = buffer->decrypt_config();
+        data->decrypt_scheme = config->DrmScheme();
+
         data->session_id = config->SessionId();
         data->key_id.insert(data->key_id.begin(), config->key_id().c_str(), config->key_id().c_str() + config->key_id().length());
         data->iv_data.insert(data->iv_data.begin(), config->iv().c_str(), config->iv().c_str() + config->iv().length());

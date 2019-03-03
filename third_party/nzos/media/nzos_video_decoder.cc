@@ -155,6 +155,13 @@ void NZVideoDecoder::Initialize(
   DCHECK(!output_cb.is_null());
   DCHECK(!config.is_encrypted());
 
+  InitCB bound_init_cb = BindToCurrentLoop(init_cb);
+
+  if (config.is_encrypted()) {
+    bound_init_cb.Run(false);
+    return;
+  }
+
   if (state_ == kIdle) {
     Nz_Proxy_Create create_data;
     create_data.id = id_;
@@ -170,7 +177,6 @@ void NZVideoDecoder::Initialize(
   output_cb_ = BindToCurrentLoop(output_cb);
 
   config_ = config;
-  InitCB bound_init_cb = BindToCurrentLoop(init_cb);
 
   LOG(ERROR) << "NZ: Initialize: id: " << id_
             << " config: " << config.AsHumanReadableString();
@@ -379,7 +385,6 @@ void NZVideoDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer) {
   proxy_buffer->timestamp = buffer->timestamp().InMicroseconds();
   proxy_buffer->computed_timestamp = current_timestamp_.InMicroseconds();
   proxy_buffer->encrypted = false;
-  proxy_buffer->decrypt_scheme = decryptScheme_;
   proxy_buffer->seeking = didSeek_;
   proxy_buffer->is_key_frame = buffer->is_key_frame();
 
@@ -392,6 +397,7 @@ void NZVideoDecoder::DecodeBuffer(const scoped_refptr<DecoderBuffer>& buffer) {
 
       const media::DecryptConfig* config = buffer->decrypt_config();
 
+      proxy_buffer->decrypt_scheme = config->DrmScheme();
       proxy_buffer->session_id = config->SessionId();
 
       proxy_buffer->key_id.insert(

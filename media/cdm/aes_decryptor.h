@@ -85,8 +85,6 @@ class MEDIA_EXPORT AesDecryptor : public ContentDecryptionModule,
   void ResetDecoder(StreamType stream_type) override;
   void DeinitializeDecoder(StreamType stream_type) override;
 
-  int GetDrmScheme() override;
-
  private:
 
   // Testing classes that needs to manipulate internal states for testing.

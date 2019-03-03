@@ -218,10 +218,6 @@ void MojoDecryptor::OnKeyAdded() {
     new_video_key_cb_.Run();
 }
 
-int MojoDecryptor::GetDrmScheme() {
-  return 0;
-}
-
 void MojoDecryptor::OnBufferDecrypted(DecryptOnceCB decrypt_cb,
                                       Status status,
                                       mojom::DecoderBufferPtr buffer) {

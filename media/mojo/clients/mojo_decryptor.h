@@ -53,8 +53,6 @@ class MojoDecryptor : public Decryptor {
   // Called when keys have changed and an additional key is available.
   void OnKeyAdded();
 
-  int GetDrmScheme() override;
-
  private:
   // These are once callbacks corresponding to repeating callbacks DecryptCB,
   // DecoderInitCB, AudioDecodeCB and VideoDecodeCB. They are needed so that we

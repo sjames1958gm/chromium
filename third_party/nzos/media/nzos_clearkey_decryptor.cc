@@ -34,6 +34,10 @@
 
 namespace media {
 
+int NzosClearKeyDecryptor::nextKeyRequestId = 1;
+int NzosClearKeyDecryptor::nextSessionId = 1;
+
+// This id is not used anymore.
 int NzosClearKeyDecryptor::ids = 1;
 std::map<int, NzosClearKeyDecryptor*> NzosClearKeyDecryptor::nz_decryptors_;
 NzosMediaProxyInterface* NzosClearKeyDecryptor::proxyInterface;
@@ -48,6 +52,46 @@ NzosClearKeyDecryptor* NzosClearKeyDecryptor::getDecryptor (int id) {
 
   return NULL;
 }
+
+namespace {
+
+// Vastly simplified ACM random class, based on media/base/test_random.h.
+// base/rand_util.h doesn't work in the sandbox. This class generates
+// predictable sequences of pseudorandom numbers. These are only used for
+// persistent session IDs, so unpredictable sequences are not necessary.
+uint32_t Rand(uint32_t seed) {
+  static const uint64_t A = 16807;        // bits 14, 8, 7, 5, 2, 1, 0
+  static const uint64_t M = 2147483647L;  // 2^32-1
+  return static_cast<uint32_t>((seed * A) % M);
+}
+
+// Create a random session ID. Returned value is a printable string to make
+// logging the session ID easier.
+std::string GenerateSessionId(int& sessionId_int) {
+  // Create a random value. There is a slight chance that the same ID is
+  // generated in different processes, but session IDs are only ever saved
+  // by External Clear Key, which is test only.
+  static uint32_t seed = 0;
+  if (!seed) {
+    // If this is the first call, use the current time as the starting value.
+    seed = static_cast<uint32_t>(base::Time::Now().ToInternalValue());
+  }
+  seed = Rand(seed);
+
+  // Include an incrementing value to ensure that the session ID is unique
+  // in this process.
+  static int next_session_id_suffix = 0;
+  next_session_id_suffix++;
+
+  // return base::HexEncode(&seed, sizeof(seed)) +
+  //        base::HexEncode(&next_session_id_suffix,
+  //                        sizeof(next_session_id_suffix));
+  sessionId_int = seed + next_session_id_suffix;
+  return base::HexEncode(&sessionId_int, sizeof(sessionId_int));
+}
+
+}  // namespace
+
 
 // static
 void NzosClearKeyDecryptor::SetProxyInterface(NzosMediaProxyInterface* inst) {
@@ -135,8 +179,6 @@ void NzosClearKeyDecryptor::SessionIdDecryptionKeyMap::Erase (
   DCHECK(position->second);
   key_list_.erase (position);
 }
-
-uint32_t NzosClearKeyDecryptor::next_session_id_ = 1;
 
 // enum ClearBytesBufferSel {
 //   kSrcContainsClearBytes,
@@ -280,7 +322,7 @@ static scoped_refptr<DecoderBuffer> DecryptDataNz (const DecoderBuffer& input,
   output->set_decrypt_config (media::DecryptConfig::CreateCencConfig(input.decrypt_config ()->key_id (),
                              input.decrypt_config ()->iv (),
                              input.decrypt_config ()->subsamples (),
-                             sessionId));
+                             sessionId, e_QzPropertyDrmScheme_ClearKey));
   return output;
 }
 
@@ -300,14 +342,19 @@ NzosClearKeyDecryptor::NzosClearKeyDecryptor (const SessionMessageCB& session_me
 
   LOG(INFO) << "NzosClearKeyDecryptor Construct: ";
 
+  sId_ = GenerateSessionId(id_);
+  
+  nz_decryptors_[id_] = this;
+
+  SendCreate(id_);
 }
 
 NzosClearKeyDecryptor::~NzosClearKeyDecryptor () {
   key_map_.clear ();
-  LOG(INFO) << "NzosClearKeyDecryptor Destruct: " << GetInstanceId();
+  LOG(INFO) << "NzosClearKeyDecryptor Destruct: " << id_;
 
   Nz_Session_Release session_data;
-  session_data.id = GetInstanceId();
+  session_data.id = id_;
   if (proxyInterface) {
     proxyInterface->ReleaseSession (session_data);
   }
@@ -316,7 +363,6 @@ NzosClearKeyDecryptor::~NzosClearKeyDecryptor () {
 
 bool NzosClearKeyDecryptor::NzosAesCapable () {
   // TODOSJ: Hook this in to Mojo
-  LOG(FATAL) << "SJSJ - NzosAesCapable";
   return false;
   // TODOSJ
   // return content::NzVideoProxyDispatcher::Instance ()->ClearkeyCapable ();
@@ -335,12 +381,12 @@ void NzosClearKeyDecryptor::CreateSessionAndGenerateRequest (
         const std::vector<uint8_t>& init_data,
         std::unique_ptr<NewSessionCdmPromise> promise) {
 
-  // TODOSJ: How to resolve late instance Id
-  SetInstanceId(++next_session_id_);
-  SendCreate(GetInstanceId());
+  // TODO: Issues with InstanceId not set yet?
+  uint32_t session_id = id_ + nextSessionId++;
+  // std::string session_id_str = GenerateSessionId(session_id);
+  std::string session_id_str = base::HexEncode(&session_id, sizeof(session_id));
 
-  std::string web_session_id (base::UintToString (next_session_id_));
-  int session_id = GetInstanceId() + next_session_id_++;
+  CreateSession(session_id_str, session_type);
 
   LOG(INFO) << "CreateSessionAndGenerateRequest: init_data.size() " << init_data.size ()
       << ", init data type: " << (int)init_data_type;
@@ -386,43 +432,49 @@ void NzosClearKeyDecryptor::CreateSessionAndGenerateRequest (
 
   uint32_t promise_id = cdm_promise_adapter_.SavePromise(std::move(promise));
 
-  promises_[session_id] = promise_id;
+  int requestId =  nextKeyRequestId++;
+  promises_[requestId] = promise_id;
+  keyRequests_[requestId] = session_id;
 
   Nz_Generate_Key_Request request_data;
-  request_data.id = GetInstanceId();
-  request_data.key_rqst_id = session_id;
+  request_data.id = id_;
+  request_data.key_rqst_id = requestId;
   request_data.scheme = e_QzPropertyDrmScheme_ClearKey;
   if (init_data.size ()) {
     request_data.init_data = message;
   }
 
-  LOG(INFO) << "CreateSession: " << session_id;
+  LOG(INFO) << "CreateSession: " << session_id_str;
   proxyInterface->GenerateKeyRequest(request_data);
 }
 
 // This is invoked with the response from the nzos client
-void NzosClearKeyDecryptor::KeyRequest (uint32_t sessionId,
+void NzosClearKeyDecryptor::KeyRequest (uint32_t id,
                               uint32_t keyRqstId,
                               std::vector<uint8_t> opaque_data,
                               std::string url) {
 
-  PromiseMap::iterator it = promises_.find (keyRqstId);
-  if (it == promises_.end ()) {
-    LOG(ERROR) << "Cannot find session for : " << keyRqstId;
+  auto promise_iter = promises_.find (keyRqstId);
+  auto keyRequest_iter = keyRequests_.find(keyRqstId);
+  if (promise_iter == promises_.end ()) {
+    LOG(ERROR) << "Cannot find promise for : " << keyRqstId;
     return;
   }
 
   LOG(INFO) << "Key Request received for: " << keyRqstId;
+  int sessionId = keyRequest_iter->second;
+  keyRequests_.erase(keyRequest_iter);
 
-  uint32_t loc_session_id = keyRqstId - GetInstanceId();
-
+  std::string sessionId_str = base::HexEncode(&sessionId, sizeof(sessionId));
+  
   char web_session_id[20];
-  sprintf (web_session_id, "%d", loc_session_id);
-  std::string sid = web_session_id;
+  sprintf (web_session_id, "%s", sessionId_str.c_str());
 
-  LOG(INFO) << "Key request sent to app " << web_session_id;
+  LOG(INFO) << "Key request sent to app for " << web_session_id;
 
-  cdm_promise_adapter_.ResolvePromise(promises_[keyRqstId]);
+  cdm_promise_adapter_.ResolvePromise(promise_iter->second, sessionId_str);
+
+  promises_.erase(promise_iter);
 
   session_message_cb_.Run (web_session_id,
                            CdmMessageType::LICENSE_RELEASE,
@@ -443,8 +495,11 @@ void NzosClearKeyDecryptor::UpdateSession (const std::string& session_id,
                         std::unique_ptr<SimpleCdmPromise> promise) {
   CHECK(!response.empty ());
 
+  LOG(ERROR) << "UpdateSession "<< session_id;
+
   // TODO(jrummell): Convert back to a DCHECK once prefixed EME is removed.
   if (open_sessions_.find (session_id) == open_sessions_.end ()) {
+    LOG(ERROR) << "Session does not exist.";
     promise->reject (CdmPromise::Exception::INVALID_STATE_ERROR, 0, "Session does not exist.");
     return;
   }
@@ -454,6 +509,7 @@ void NzosClearKeyDecryptor::UpdateSession (const std::string& session_id,
   KeyIdAndKeyPairs keys;
   CdmSessionType session_type = CdmSessionType::kTemporary;
   if (!ExtractKeysFromJWKSet(key_string, &keys, &session_type)) {
+    LOG(ERROR) << "Response is not a valid JSON Web Key Set.";
     promise->reject(
         CdmPromise::Exception::INVALID_STATE_ERROR, 0, "Response is not a valid JSON Web Key Set.");
     return;
@@ -486,14 +542,13 @@ void NzosClearKeyDecryptor::UpdateSession (const std::string& session_id,
     }
     else
     {
-      int sess_id;
-      base::StringToInt(session_id, &sess_id);
-      sess_id += GetInstanceId();
+      // int sess_id;
+      // base::HexStringToInt(session_id, &sess_id);
 
       Nz_Key_Data key_data;
-      key_data.id = GetInstanceId();
+      key_data.id = id_;
 
-      key_data.key_rqst_id = sess_id;
+      key_data.key_rqst_id = nextKeyRequestId++;
 
       key_data.init_data.insert(key_data.init_data.begin(), it->first.c_str(),
                                 it->first.c_str() + it->first.length());
@@ -533,8 +588,7 @@ void NzosClearKeyDecryptor::CloseSession (const std::string& web_session_id,
   open_sessions_.erase (it);
 
   int sess_id;
-  base::StringToInt (web_session_id, &sess_id);
-  sess_id += GetInstanceId();
+  base::HexStringToInt(web_session_id, &sess_id);
 
   LOG(INFO) << "CloseSession: " << sess_id;
 
@@ -606,30 +660,26 @@ void NzosClearKeyDecryptor::Decrypt (StreamType stream_type,
 
   scoped_refptr<DecoderBuffer> decrypted;
 
-  // An empty iv string signals that the frame is unencrypted.
-  if (encrypted->decrypt_config ()->iv ().empty ()) {
-    decrypted = DecoderBuffer::CopyFrom (encrypted->data (),
-                                         encrypted->data_size ());
-  }
-  else {
-    VLOG(1) << "Decrypt: " << (stream_type == kAudio ? "AUDIO" : "VIDEO");
-
-    decrypted = DecryptDataNz (*encrypted.get (), GetInstanceId());
-    if (!decrypted.get ()) {
-      DVLOG(1) << "Decryption failed.";
-      LOG(ERROR) << "Decryption failed.";
-      decrypt_cb.Run (kError, NULL);
-      return;
-    }
-    else
-    {
-      VLOG(1) << "Forwarding encrypted data";
-    }
+  if (!encrypted->decrypt_config()) {
+    // If there is no DecryptConfig, then the data is unencrypted so return it
+    // immediately.
+    decrypt_cb.Run(kSuccess, encrypted);
+    return;
   }
 
-  decrypted->set_timestamp (encrypted->timestamp ());
-  decrypted->set_duration (encrypted->duration ());
-  decrypt_cb.Run (kSuccess, decrypted);
+  VLOG(1) << "Decrypt: " << (stream_type == kAudio ? "AUDIO" : "VIDEO");
+
+  decrypted = DecryptDataNz (*encrypted.get (), GetInstanceId());
+  if (!decrypted.get ()) {
+    DVLOG(1) << "Decryption failed.";
+    LOG(ERROR) << "Decryption failed.";
+    decrypt_cb.Run (kError, NULL);
+    return;
+  }
+
+  decrypted->set_timestamp (encrypted->timestamp());
+  decrypted->set_duration (encrypted->duration());
+  decrypt_cb.Run (kSuccess, std::move(decrypted));
 }
 
 void NzosClearKeyDecryptor::CancelDecrypt (StreamType stream_type) {
@@ -670,23 +720,32 @@ void NzosClearKeyDecryptor::DeinitializeDecoder (StreamType stream_type) {
   NOTREACHED() << "NzosClearKeyDecryptor does not support audio/video decoding";
 }
 
-int NzosClearKeyDecryptor::GetDrmScheme () {
-  return e_QzPropertyDrmScheme_ClearKey;
-}
-
 void NzosClearKeyDecryptor::SetInstanceId(uint32_t id) {
   ContentDecryptionModule::SetInstanceId(id);
 
-  nz_decryptors_[id] = this;
+  // LOG(ERROR) << "SJSJ " << id;
 
+  // nz_decryptors_[id] = this;
+
+  // SendCreate(id);
 }
 
-void NzosClearKeyDecryptor::SendCreate(uint32_t id) {
+void NzosClearKeyDecryptor::SendCreate(int id) {
   Nz_Decrypt_Create create_data;
   create_data.id = id;
   create_data.scheme = e_QzPropertyDrmScheme_ClearKey;
 
   proxyInterface->CreateDecryptor(create_data);
+}
+
+bool NzosClearKeyDecryptor::CreateSession(const std::string& session_id,
+                                 CdmSessionType session_type) {
+  auto it = open_sessions_.find(session_id);
+  if (it != open_sessions_.end())
+    return false;
+
+  auto result = open_sessions_.emplace(session_id, session_type);
+  return result.second;
 }
 
 bool NzosClearKeyDecryptor::AddDecryptionKey (const std::string& session_id,

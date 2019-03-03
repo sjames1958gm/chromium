@@ -328,8 +328,10 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
   }
   media_log_->SetStringProperty("surface_layer_mode", surface_layer_mode_name);
 
+  LOG(ERROR) << "webmedia player construct " << delegate_id_;
+  LOG(ERROR) << "webmedia player construct " << frame_->GetDocument().Url().GetString().Utf8();
+
   if (params->initial_cdm()) {
-    LOG(ERROR) << "SJSJ";
     SetCdm(params->initial_cdm());
     params->initial_cdm()->setInstanceId(delegate_id_);
   }
@@ -1372,7 +1374,6 @@ void WebMediaPlayerImpl::SetContentDecryptionModule(
 
   // For now MediaCapabilities only handles clear content.
   video_decode_stats_reporter_.reset();
-  LOG(ERROR) << "SJSJ";
   cdm->setInstanceId(delegate_id_);
   SetCdm(cdm);
 }
@@ -1445,6 +1446,15 @@ void WebMediaPlayerImpl::SetCdm(blink::WebContentDecryptionModule* cdm) {
     OnCdmAttached(false);
     return;
   }
+
+  // media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  // if (videoDecoder) {
+  //   videoDecoder->SetKeySystem(drm_scheme_);
+  // } 
+  // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+  // if (audioDecoder) {
+  //   audioDecoder->SetKeySystem(drm_scheme_);
+  // }
 
   CdmContext* cdm_context = cdm_context_ref->GetCdmContext();
   DCHECK(cdm_context);
@@ -2503,8 +2513,8 @@ void WebMediaPlayerImpl::MaybeSendOverlayInfoToDecoder() {
 std::unique_ptr<Renderer> WebMediaPlayerImpl::CreateRenderer() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
 
-  // Make sure that overlays are enabled if they're always allowed.
   if (always_enable_overlays_)
+  // Make sure that overlays are enabled if they're always allowed.
     EnableOverlay();
 
   RequestOverlayInfoCB request_overlay_info_cb;
@@ -2514,9 +2524,13 @@ std::unique_ptr<Renderer> WebMediaPlayerImpl::CreateRenderer() {
 #endif
   // NZOS -- using delegate id as stream/renderer id as it appears to 
   //         exist for the entire life of this object and is likely unique
-  return renderer_factory_selector_->GetCurrentFactory()->CreateRenderer(
+  std::unique_ptr<Renderer> retvalue = renderer_factory_selector_->GetCurrentFactory()->CreateRenderer(
       media_task_runner_, worker_task_runner_, audio_source_provider_.get(),
       compositor_.get(), request_overlay_info_cb, client_->TargetColorSpace(), delegate_id_);
+
+  LOG(ERROR) << "Create Renderers: " << delegate_id_;
+
+  return retvalue;
 }
 
 void WebMediaPlayerImpl::StartPipeline() {
