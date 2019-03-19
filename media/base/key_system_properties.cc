@@ -11,7 +11,7 @@ SupportedCodecs KeySystemProperties::GetSupportedHwSecureCodecs() const {
 }
 
 bool KeySystemProperties::UseAesDecryptor() const {
-  return false;
+  return true;
 }
 
 }  // namespace media

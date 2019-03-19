@@ -296,6 +296,10 @@ void NzosPlatformThread::EventDRMKeyRequest(uint32_t u32SessionId, uint32_t u32K
   if (Instance()->platformInterface_) Instance()->platformInterface_->OnKeyMessageReceived(u32SessionId, u32KeyRqstId, pOpaqueData, u32OpaqueDataLen, pUrl, u32UrlLen);
 }
 
+void NzosPlatformThread::EventDRMKeyResponseAck(uint32_t u32SessionId, uint32_t u32Scheme, uint32_t u32KeyRqstId, 
+  const char* response, uint32_t u32ResponseLen, const char* keySetId, uint32_t u32KeySetIdLen) {
+}
+
 void NzosPlatformThread::EventMouse(uint32_t Op, uint32_t u32Flags, uint32_t X, uint32_t Y) {
   if (NzosPlatformThread::Instance()->IsAppConnected()) {
     if (NzosEventFactory::GetInstance()->EventConverter()) {
@@ -561,6 +565,7 @@ void NzosPlatformThread::NzosInit() {
   callbacks.NzEventResize                   = NzosPlatformThread::EventResize;
   callbacks.NzEventJoystick                 = NzosPlatformThread::EventJoystick;
   callbacks.NzEventDRMKeyRequest            = NzosPlatformThread::EventDRMKeyRequest;
+  callbacks.NzEventDRMKeyResponseAck        = NzosPlatformThread::EventDRMKeyResponseAck;
   callbacks.NzEventDevicePropertiesEx       = NzosPlatformThread::EventDevicePropertiesEx;
   callbacks.NzEventTouchEx                  = NzosPlatformThread::EventTouch;
   callbacks.NzEventClipboardCopyComplete    = NzosPlatformThread::sEventClipboardCopyComplete;

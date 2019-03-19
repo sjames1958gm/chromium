@@ -902,7 +902,8 @@ void KeySystemConfigSelector::SelectConfig(
   }
 
   std::string key_system_ascii = key_system.Ascii();
-  if (!key_systems_->IsSupportedKeySystem(key_system_ascii)) {
+  // NZOS
+  if (false){ // !key_systems_->IsSupportedKeySystem(key_system_ascii)) {
     not_supported_cb.Run();
     return;
   }

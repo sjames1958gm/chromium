@@ -319,6 +319,10 @@ void AddChromeKeySystems(
   AddWidevine(key_systems_properties);
 #endif  // BUILDFLAG(ENABLE_WIDEVINE)
 
+// NZOS:
+key_systems_properties->emplace_back(
+    new cdm::ExternalClearKeyProperties("com.widevine.alpha"));
+
 #endif  // BUILDFLAG(ENABLE_LIBRARY_CDMS)
 
 #if defined(OS_ANDROID)

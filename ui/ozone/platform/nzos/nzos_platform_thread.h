@@ -66,6 +66,7 @@ class NzosPlatformThread : public base::Thread {
   static void EventDisconnected();
   static void EventDevicePropertiesEx(void* pNzDevice);
   static void EventDRMKeyRequest(uint32_t u32SessionId, uint32_t u32KeyRqstId, const uint8_t* pOpaqueData, uint32_t u32OpaqueDataLen, const char* pUrl, uint32_t u32UrlLen);
+  static void EventDRMKeyResponseAck(uint32_t u32SessionId, uint32_t u32Scheme, uint32_t u32KeyRqstId, const char* response, uint32_t u32ResponseLen, const char* keySetId, uint32_t u32KeySetIdLen);
   static void EventKeyboard(uint32_t Op, uint32_t u32Flags, uint32_t Key);
   static void EventJoystick(uint32_t u32JoystickId, uint32_t u32AxisCount, uint32_t u32AxisInput, const int32_t* i32AxisValues, uint32_t u32ButtonCount, uint64_t u64ButtonInput, uint64_t u64ButtonStates);
   static void EventMouse(uint32_t Op, uint32_t u32Flags, uint32_t X, uint32_t Y);

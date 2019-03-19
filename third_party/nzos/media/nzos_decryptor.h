@@ -34,21 +34,22 @@ namespace media {
 
 // Decrypts an AES encrypted buffer into an unencrypted buffer. The AES
 // encryption must be CTR with a key size of 128bits.
-  class MEDIA_EXPORT NzosClearKeyDecryptor : public ContentDecryptionModule,
+  class MEDIA_EXPORT NzosDecryptor : public ContentDecryptionModule,
                                      public CdmContext,
                                      public Decryptor {
   public:
-    NzosClearKeyDecryptor (const SessionMessageCB& session_message_cb,
+    NzosDecryptor (const SessionMessageCB& session_message_cb,
                    const SessionClosedCB& session_closed_cb,
                    const SessionKeysChangeCB& session_keys_change_cb,
-                   const SessionExpirationUpdateCB& session_expiration_update_cb);
-    ~NzosClearKeyDecryptor () override;
+                   const SessionExpirationUpdateCB& session_expiration_update_cb, 
+                   const std::string& key_system);
+    ~NzosDecryptor () override;
 
     // NzOS specific
     static void SetProxyInterface(NzosMediaProxyInterface* inst);
 
     static bool NzosAesCapable ();
-    static NzosClearKeyDecryptor* getDecryptor (int id);
+    static NzosDecryptor* getDecryptor (int id);
     static uint32_t SessionIdFromKeyId (const std::string& key_id);
     void KeyRequest (uint32_t sessionId, uint32_t keyRqstId,
                      std::vector<uint8_t> opaque_data, std::string url);
@@ -189,20 +190,24 @@ namespace media {
     NewKeyCB new_video_key_cb_ GUARDED_BY(new_key_cb_lock_);
 
     using PromiseMap = std::unordered_map<uint32_t, uint32_t>;
-    using KeyRequestMap = std::unordered_map<int, int>;
+    using KeyRequestMap = std::unordered_map<uint32_t, uint32_t>;
+    using UpdateSessionMap = std::unordered_map<std::string, uint32_t>;
 
     // Storage for promises from invocation to response from client.
     // CdmPromiseAdapter cdm_promise_adapter_;
     PromiseMap promises_;
     KeyRequestMap keyRequests_;
+    UpdateSessionMap updateMap_;
 
     int id_;
     std::string sId_;
 
-    static std::map<int, NzosClearKeyDecryptor*> nz_decryptors_;
+    uint32_t scheme_;
+
+    static std::map<int, NzosDecryptor*> nz_decryptors_;
     static NzosMediaProxyInterface* proxyInterface;
 
-    DISALLOW_COPY_AND_ASSIGN(NzosClearKeyDecryptor);
+    DISALLOW_COPY_AND_ASSIGN(NzosDecryptor);
   };
 
 }  // namespace media

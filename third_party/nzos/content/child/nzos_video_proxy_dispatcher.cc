@@ -17,7 +17,7 @@
 #include "media/base/media_switches.h"
 #include "third_party/nzos/media/nzos_video_decoder.h"
 #include "third_party/nzos/media/nzos_audio_decoder.h"
-#include "third_party/nzos/media/nzos_clearkey_decryptor.h"
+#include "third_party/nzos/media/nzos_decryptor.h"
 
 
 // TODOSJ
@@ -115,7 +115,7 @@ NzVideoProxyDispatcher::NzVideoProxyDispatcher(
 
   media::NZVideoDecoder::SetProxyInterface(this);
   media::NZAudioDecoder::SetProxyInterface(this);
-  media::NzosClearKeyDecryptor::SetProxyInterface(this);
+  media::NzosDecryptor::SetProxyInterface(this);
 
 }
 
@@ -216,7 +216,7 @@ void NzVideoProxyDispatcher::OnKeyRequest(const Nz_Key_Request& key_request) {
 
     LOG(ERROR) << "OnKeyRequest: " << key_request.id;
 
-    media::NzosClearKeyDecryptor* decryptor = media::NzosClearKeyDecryptor::getDecryptor(
+    media::NzosDecryptor* decryptor = media::NzosDecryptor::getDecryptor(
                     key_request.id);
     if (decryptor) {
             return decryptor->KeyRequest(key_request.id,

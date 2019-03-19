@@ -17,7 +17,7 @@
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "url/origin.h"
 
-#include "third_party/nzos/media/nzos_clearkey_decryptor.h"
+#include "third_party/nzos/media/nzos_decryptor.h"
 
 namespace media {
 
@@ -54,8 +54,8 @@ void MojoCdmFactory::Create(
 #if !BUILDFLAG(ENABLE_MOJO_RENDERER)
   if (CanUseAesDecryptor(key_system)) {
     scoped_refptr<ContentDecryptionModule> cdm(
-        new NzosClearKeyDecryptor(session_message_cb, session_closed_cb,
-                         session_keys_change_cb, session_expiration_update_cb));
+        new NzosDecryptor(session_message_cb, session_closed_cb,
+                          session_keys_change_cb, session_expiration_update_cb, key_system));
     base::ThreadTaskRunnerHandle::Get()->PostTask(
         FROM_HERE, base::BindOnce(cdm_created_cb, cdm, ""));
     return;
