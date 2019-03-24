@@ -450,13 +450,18 @@ NzosDecryptor::NzosDecryptor(
   DCHECK(!session_keys_change_cb_.is_null());
   DCHECK(!session_expiration_update_cb.is_null());
 
-  LOG(INFO) << "NzosDecryptor Construct: ";
 
   sId_ = GenerateSessionId(id_);
+
+  LOG(INFO) << "NzosDecryptor Construct: " << id_;
 
   if (key_system.compare("com.widevine.alpha") == 0) {
     scheme_ = e_QzPropertyDrmScheme_Widevine;
   }
+
+  // Client session is the same as one instance of this class
+  nz_decryptors_[id_] = this;
+  SendCreate(id_);
 
 }
 
@@ -490,16 +495,14 @@ void NzosDecryptor::CreateSessionAndGenerateRequest(
     EmeInitDataType init_data_type,
     const std::vector<uint8_t>& init_data,
     std::unique_ptr<NewSessionCdmPromise> promise) {
-  // TODO: Issues with InstanceId not set yet?
-  uint32_t session_id = id_ + nextSessionId++;
 
-  nz_decryptors_[session_id] = this;
-  SendCreate(session_id);
+  // Session ID to application is keyrequest id to client
+  uint32_t requestId = id_ + nextSessionId++;
 
   // std::string session_id_str = GenerateSessionId(session_id);
-  std::string session_id_str = base::NumberToString(session_id);
+  std::string requestId_str = base::NumberToString(requestId);
 
-  CreateSession(session_id_str, session_type);
+  CreateSession(requestId_str, session_type);
 
   LOG(INFO) << "CreateSessionAndGenerateRequest: init_data.size() "
             << init_data.size() << ", init data type: " << (int)init_data_type;
@@ -548,11 +551,11 @@ void NzosDecryptor::CreateSessionAndGenerateRequest(
     }
 
     uint32_t promise_id = cdm_promise_adapter_.SavePromise(std::move(promise));
-    int requestId = nextKeyRequestId++;
+    // int requestId = nextKeyRequestId++;
     promises_[requestId] = promise_id;
-    keyRequests_[requestId] = session_id;
+    // keyRequests_[requestId] = session_id;
 
-    request_data.id = session_id;
+    request_data.id = id_;
     request_data.key_rqst_id = requestId;
     request_data.scheme = scheme_;
     if (init_data.size()) {
@@ -561,11 +564,11 @@ void NzosDecryptor::CreateSessionAndGenerateRequest(
   } else {
     // Not ClearKey - that is Widevine
     uint32_t promise_id = cdm_promise_adapter_.SavePromise(std::move(promise));
-    int requestId = nextKeyRequestId++;
+    // int requestId = nextKeyRequestId++;
     promises_[requestId] = promise_id;
-    keyRequests_[requestId] = session_id;
+    // keyRequests_[requestId] = session_id;
 
-    request_data.id = session_id;
+    request_data.id = id_;
     request_data.key_rqst_id = requestId;
     request_data.scheme = scheme_;
     if (init_data.size()) {
@@ -579,7 +582,7 @@ void NzosDecryptor::CreateSessionAndGenerateRequest(
     }
   }
 
-  LOG(INFO) << "CreateSession: " << session_id_str << " "
+  LOG(INFO) << "CreateSession: " << id_ << " "
             << request_data.key_rqst_id;
   proxyInterface->GenerateKeyRequest(request_data);
 }
@@ -589,21 +592,23 @@ void NzosDecryptor::KeyRequest(uint32_t id,
                                uint32_t keyRqstId,
                                std::vector<uint8_t> opaque_data,
                                std::string url) {
+
   auto promise_iter = promises_.find(keyRqstId);
-  auto keyRequest_iter = keyRequests_.find(keyRqstId);
+  // auto keyRequest_iter = keyRequests_.find(keyRqstId);
   if (promise_iter == promises_.end()) {
     LOG(ERROR) << "Cannot find promise for : " << keyRqstId;
     return;
   }
 
-  int sessionId = keyRequest_iter->second;
-  keyRequests_.erase(keyRequest_iter);
+  // int sessionId = keyRequest_iter->second;
+  // keyRequests_.erase(keyRequest_iter);
 
-  LOG(INFO) << "Key Request received for: " << keyRqstId;
   LOG(INFO) << "Key Request received for: " << id;
-  LOG(INFO) << "Key Request received for: " << sessionId;
+  LOG(INFO) << "Key Request received for: " << keyRqstId;
+  
+  // LOG(INFO) << "Key Request received for: " << sessionId;
 
-  std::string sessionId_str = base::NumberToString(sessionId);
+  std::string sessionId_str = base::NumberToString(keyRqstId);
 
   updateMap_[sessionId_str] = keyRqstId;
 
@@ -656,7 +661,6 @@ void NzosDecryptor::UpdateSession(const std::string& session_id,
 
   bool key_added = false;
   if (scheme_ == e_QzPropertyDrmScheme_ClearKey) {
-    LOG(ERROR) <<"SJSJ";
     std::string key_string(response.begin(), response.end());
 
     KeyIdAndKeyPairs keys;
@@ -667,16 +671,14 @@ void NzosDecryptor::UpdateSession(const std::string& session_id,
                       "Response is not a valid JSON Web Key Set.");
       return;
     }
-    LOG(ERROR) <<"SJSJ";
-
+  
     // Make sure that at least one key was extracted.
     if (keys.empty()) {
       promise->reject(CdmPromise::Exception::INVALID_STATE_ERROR, 0,
                       "Response does not contain any keys.");
       return;
     }
-    LOG(ERROR) <<"SJSJ";
-
+  
     for (KeyIdAndKeyPairs::iterator it = keys.begin(); it != keys.end(); ++it) {
       if (it->second.length() !=
           static_cast<size_t>(DecryptConfig::kDecryptionKeySize)) {
@@ -699,11 +701,11 @@ void NzosDecryptor::UpdateSession(const std::string& session_id,
         // int sess_id;
         // base::HexStringToInt(session_id, &sess_id);
         LOG(ERROR) <<"SJSJ";
-        int sess_id;
-        base::StringToInt(session_id, &sess_id);
-        LOG(ERROR) << "Update Key " << sess_id;
+        // int sess_id;
+        // base::StringToInt(session_id, &sess_id);
+        // LOG(ERROR) << "Update Key " << sess_id;
         Nz_Key_Data key_data;
-        key_data.id = sess_id;
+        key_data.id = id_;
 
         key_data.key_rqst_id = keyRequestId;
 
@@ -716,11 +718,11 @@ void NzosDecryptor::UpdateSession(const std::string& session_id,
       }
     }
   } else {
-    int sess_id;
-    base::StringToInt(session_id, &sess_id);
-    LOG(ERROR) << "Update Key " << sess_id;
+    // int sess_id;
+    // base::StringToInt(session_id, &sess_id);
+    // LOG(ERROR) << "Update Key " << sess_id;
     Nz_Key_Data key_data;
-    key_data.id = sess_id;
+    key_data.id = id_;
 
     key_data.key_rqst_id = keyRequestId;
     key_data.key_data.assign(response.begin(), response.end());

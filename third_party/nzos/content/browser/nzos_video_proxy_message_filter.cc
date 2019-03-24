@@ -1695,7 +1695,7 @@ NzVideoProxyMessageFilter::OnGenerateKeyRequestUIThread (
     const Nz_Generate_Key_Request& request_data) {
   map<int, NzDRMSession*>::iterator it = sessions_.find (request_data.id);
   if (it == sessions_.end ()) {
-    LOG(ERROR) << "OnUpdateSession session not found: " << request_data.id;
+    LOG(ERROR) << "OnGenerateKeyRequest session not found: " << request_data.id;
     return;
   }
 
@@ -1727,8 +1727,9 @@ NzVideoProxyMessageFilter::OnUpdateSessionUIThread (
 
   NzDRMSession* s = it->second;
 
-  LOG(INFO) << "NzDRMSetKey: Session Id: " << key_data.id
-               << ", init data size: " << key_data.init_data.size ();
+  LOG(INFO) << "NzDRMSetKey: Session Id: " << key_data.id 
+            << " Request ID: " << key_data.key_rqst_id
+            << ", init data size: " << key_data.init_data.size ();
   if (key_data.init_data.size () == 0) {
     NzDRMSetKey (s->scheme_, key_data.id, key_data.key_rqst_id, NULL, 0,
                  &key_data.key_data[0], key_data.key_data.size ());
