@@ -989,7 +989,7 @@ bool MimeUtil::IsCodecProprietary(Codec codec) const {
 
 bool MimeUtil::IsCodecSupportedNz(Codec codec) const {
   // TODO: Smarter check here?
-  LOG(ERROR) << "SJSJ " << codec;
+  LOG(ERROR) << "IsCodecSupportedNz: " << codec;
    switch (codec) {
     case H264:
     case VP8:
