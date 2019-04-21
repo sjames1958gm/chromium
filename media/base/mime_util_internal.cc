@@ -952,6 +952,10 @@ SupportsType MimeUtil::IsCodecSupported(const std::string& mime_type_lower_case,
   }
 #endif
 
+  if (!IsCodecSupportedNz(codec)) {
+    return IsNotSupported;
+  }
+
   return ambiguous_platform_support ? MayBeSupported : IsSupported;
 }
 
@@ -981,6 +985,36 @@ bool MimeUtil::IsCodecProprietary(Codec codec) const {
   }
 
   return true;
+}
+
+bool MimeUtil::IsCodecSupportedNz(Codec codec) const {
+  // TODO: Smarter check here?
+  LOG(ERROR) << "SJSJ " << codec;
+   switch (codec) {
+    case H264:
+    case VP8:
+    case MPEG4_AAC:
+    case PCM:
+      return true;
+
+    case INVALID_CODEC:
+    case AC3:
+    case EAC3:
+    case MPEG_H_AUDIO:
+    case MPEG2_AAC:
+    case HEVC:
+    case DOLBY_VISION:
+    case MP3:
+    case VORBIS:
+    case OPUS:
+    case FLAC:
+    case VP9:
+    case THEORA:
+    case AV1:
+      return false;
+  }
+
+  return false;
 }
 
 bool MimeUtil::GetDefaultCodec(const std::string& mime_type,
