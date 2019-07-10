@@ -8,6 +8,7 @@
 
 #include "base/logging.h"
 #include "media/base/audio_bus.h"
+#include "third_party/nzos/media/nzos_audio_decoder.h"
 
 namespace media {
 
@@ -138,6 +139,15 @@ int AudioBufferQueue::InternalRead(int frames,
 
     // Has the buffer has been consumed?
     if (current_buffer_offset == buffer->frame_count()) {
+      if (buffer->nz_decoder_index() != 0)
+      {
+        media::NZAudioDecoder* aDecoder =
+                        media::NZAudioDecoder::getNzDecoder(buffer->nz_decoder_index());
+        if (aDecoder) {
+          aDecoder->BufferProcessed(buffer->timestamp());
+        }
+      }
+
       // If we are at the last buffer, no more data to be copied, so stop.
       BufferQueue::iterator next = current_buffer + 1;
       if (next == buffers_.end())

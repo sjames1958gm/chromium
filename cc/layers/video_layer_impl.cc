@@ -52,6 +52,11 @@ VideoLayerImpl::VideoLayerImpl(
       frame_(nullptr),
       video_rotation_(video_rotation) {
   set_may_contain_video(true);
+
+  // NZOS -- bounding rect of video
+  gfx::Rect rect = drawable_content_rect();
+  provider_client_impl_->SetActiveVideoLayer(this, rect);
+
 }
 
 VideoLayerImpl::~VideoLayerImpl() {
@@ -74,7 +79,9 @@ std::unique_ptr<LayerImpl> VideoLayerImpl::CreateLayerImpl(
 }
 
 void VideoLayerImpl::DidBecomeActive() {
-  provider_client_impl_->SetActiveVideoLayer(this);
+  // NZOS - bounding rect changes
+  gfx::Rect rect = drawable_content_rect();
+  provider_client_impl_->SetActiveVideoLayer(this, rect);
 }
 
 bool VideoLayerImpl::WillDraw(DrawMode draw_mode,

@@ -31,12 +31,13 @@ DefaultRendererFactory::~DefaultRendererFactory() = default;
 
 std::vector<std::unique_ptr<AudioDecoder>>
 DefaultRendererFactory::CreateAudioDecoders(
-    const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner) {
+    const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner,
+    int streamId) {
   // Create our audio decoders and renderer.
   std::vector<std::unique_ptr<AudioDecoder>> audio_decoders;
 
   decoder_factory_->CreateAudioDecoders(media_task_runner, media_log_,
-                                        &audio_decoders);
+                                        &audio_decoders, streamId);
   return audio_decoders;
 }
 
@@ -45,13 +46,14 @@ DefaultRendererFactory::CreateVideoDecoders(
     const scoped_refptr<base::SingleThreadTaskRunner>& media_task_runner,
     const RequestOverlayInfoCB& request_overlay_info_cb,
     const gfx::ColorSpace& target_color_space,
-    GpuVideoAcceleratorFactories* gpu_factories) {
+    GpuVideoAcceleratorFactories* gpu_factories,
+    int streamId) {
   // Create our video decoders and renderer.
   std::vector<std::unique_ptr<VideoDecoder>> video_decoders;
 
   decoder_factory_->CreateVideoDecoders(media_task_runner, gpu_factories,
                                         media_log_, request_overlay_info_cb,
-                                        target_color_space, &video_decoders);
+                                        target_color_space, &video_decoders, streamId);
 
   return video_decoders;
 }
@@ -62,7 +64,8 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
     AudioRendererSink* audio_renderer_sink,
     VideoRendererSink* video_renderer_sink,
     const RequestOverlayInfoCB& request_overlay_info_cb,
-    const gfx::ColorSpace& target_color_space) {
+    const gfx::ColorSpace& target_color_space,
+    int streamId) {
   DCHECK(audio_renderer_sink);
 
   std::unique_ptr<AudioRenderer> audio_renderer(new AudioRendererImpl(
@@ -74,7 +77,7 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
       // RendererFactory is owned by WMPI and gets called after WMPI destructor
       // finishes.
       base::Bind(&DefaultRendererFactory::CreateAudioDecoders,
-                 base::Unretained(this), media_task_runner),
+                 base::Unretained(this), media_task_runner, streamId),
       media_log_));
 
   GpuVideoAcceleratorFactories* gpu_factories = nullptr;
@@ -99,7 +102,7 @@ std::unique_ptr<Renderer> DefaultRendererFactory::CreateRenderer(
       // finishes.
       base::Bind(&DefaultRendererFactory::CreateVideoDecoders,
                  base::Unretained(this), media_task_runner,
-                 request_overlay_info_cb, target_color_space, gpu_factories),
+                 request_overlay_info_cb, target_color_space, gpu_factories, streamId),
       true, media_log_, std::move(gmb_pool)));
 
   return std::make_unique<RendererImpl>(

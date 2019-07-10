@@ -20,6 +20,9 @@
 #include "media/audio/pulse/audio_manager_pulse.h"
 #include "media/audio/pulse/pulse_util.h"
 #endif
+#if defined(USE_NZOSAUDIO)
+#include "media/audio/nzos/nzos_audio_manager.h"
+#endif
 
 namespace media {
 
@@ -27,7 +30,8 @@ enum LinuxAudioIO {
   kPulse,
   kAlsa,
   kCras,
-  kAudioIOMax = kCras  // Must always be equal to largest logged entry.
+  kNzOS,
+  kAudioIOMax = kNzOS  // Must always be equal to largest logged entry.
 };
 
 std::unique_ptr<media::AudioManager> CreateAudioManager(
@@ -39,6 +43,12 @@ std::unique_ptr<media::AudioManager> CreateAudioManager(
     return std::make_unique<AudioManagerCras>(std::move(audio_thread),
                                               audio_log_factory);
   }
+#endif
+
+#if defined(USE_NZOSAUDIO)
+  // AudioManager* manager = AudioManagerNzOS::Create();
+    UMA_HISTOGRAM_ENUMERATION("Media.NzOsAudioIO", kNzOS, kAudioIOMax + 1);
+    return std::make_unique<AudioManagerNzOS>(std::move(audio_thread), audio_log_factory);
 #endif
 
 #if defined(USE_PULSEAUDIO)

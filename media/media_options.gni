@@ -6,6 +6,7 @@ import("//build/config/chrome_build.gni")
 import("//build/config/chromecast_build.gni")
 import("//build/config/features.gni")
 import("//testing/libfuzzer/fuzzer_test.gni")
+import("//ui/ozone/ozone.gni")
 
 # Do not expand this list without double-checking with OWNERS, this is a list of
 # all targets which roll up into the //media component. It controls visibility
@@ -95,6 +96,12 @@ declare_args() {
 
   # Enables runtime selection of ALSA library for audio.
   use_alsa = false
+
+  use_nzosaudio = false
+
+  if (use_ozone && is_chromeos) {
+    use_nzosaudio = true
+  }
 
   # Alsa should be used on non-Android, non-Mac POSIX systems.
   # Alsa should be used on desktop Chromecast and audio-only Chromecast builds.

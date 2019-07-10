@@ -427,7 +427,6 @@ void CdmAdapter::Decrypt(StreamType stream_type,
                          const DecryptCB& decrypt_cb) {
   DVLOG(3) << __func__ << ": " << encrypted->AsHumanReadableString();
   DCHECK(task_runner_->BelongsToCurrentThread());
-
   TRACE_EVENT0("media", "CdmAdapter::Decrypt");
   ScopedCrashKeyString scoped_crash_key(&g_origin_crash_key, origin_string_);
 

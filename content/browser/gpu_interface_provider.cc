@@ -79,7 +79,7 @@ void GpuInterfaceProvider::RegisterGpuInterfaces(
       gpu_task_runner);
 }
 
-#if defined(USE_OZONE)
+#if defined(USE_OZONE) && defined(DUMMY)    
 void GpuInterfaceProvider::RegisterOzoneGpuInterfaces(
     service_manager::BinderRegistry* registry) {
   // Registers the gpu-related interfaces needed by Ozone.

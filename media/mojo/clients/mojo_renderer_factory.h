@@ -38,7 +38,8 @@ class MojoRendererFactory : public RendererFactory {
       AudioRendererSink* audio_renderer_sink,
       VideoRendererSink* video_renderer_sink,
       const RequestOverlayInfoCB& request_overlay_info_cb,
-      const gfx::ColorSpace& target_color_space) final;
+      const gfx::ColorSpace& target_color_space,
+      int streamId) final;
 
   // Sets the callback that will fetch the TypeSpecificId when
   // InterfaceFactory::CreateRenderer() is called. What the string represents

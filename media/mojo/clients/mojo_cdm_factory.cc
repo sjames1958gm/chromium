@@ -17,6 +17,8 @@
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "url/origin.h"
 
+#include "third_party/nzos/media/nzos_decryptor.h"
+
 namespace media {
 
 MojoCdmFactory::MojoCdmFactory(
@@ -50,6 +52,14 @@ void MojoCdmFactory::Create(
 // Note: We should not run AesDecryptor in the browser process except for
 // testing. See http://crbug.com/441957
 #if !BUILDFLAG(ENABLE_MOJO_RENDERER)
+  if (CanUseAesDecryptor(key_system)) {
+    scoped_refptr<ContentDecryptionModule> cdm(
+        new NzosDecryptor(session_message_cb, session_closed_cb,
+                          session_keys_change_cb, session_expiration_update_cb, key_system));
+    base::ThreadTaskRunnerHandle::Get()->PostTask(
+        FROM_HERE, base::BindOnce(cdm_created_cb, cdm, ""));
+    return;
+  }
   if (CanUseAesDecryptor(key_system)) {
     scoped_refptr<ContentDecryptionModule> cdm(
         new AesDecryptor(session_message_cb, session_closed_cb,

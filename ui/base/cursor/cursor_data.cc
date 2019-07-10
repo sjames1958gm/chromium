@@ -66,7 +66,7 @@ gfx::NativeCursor CursorData::ToNativeCursor() const {
     cursor.SetPlatformCursor(factory->GetDefaultCursor(cursor_type_));
   } else if (cursor_frames_.size() > 1U) {
     cursor.SetPlatformCursor(factory->CreateAnimatedCursor(
-        cursor_frames_, hotspot_, frame_delay_.InMilliseconds(),
+        cursor_type_, cursor_frames_, hotspot_, frame_delay_.InMilliseconds(),
         scale_factor_));
     // CreateAnimatedCursor() and CreateImageCursor() below both return a cursor
     // with a ref count of 1, which we need to account for after storing it in
@@ -75,7 +75,7 @@ gfx::NativeCursor CursorData::ToNativeCursor() const {
   } else {
     DCHECK_EQ(1U, cursor_frames_.size());
     cursor.SetPlatformCursor(
-        factory->CreateImageCursor(cursor_frames_[0], hotspot_, scale_factor_));
+        factory->CreateImageCursor(cursor_type_, cursor_frames_[0], hotspot_, scale_factor_));
     cursor.UnrefCustomCursor();
   }
 #else

@@ -176,6 +176,9 @@ class MEDIA_EXPORT AudioBuffer
   // sequentially in this block.
   size_t data_size() const { return data_size_; }
 
+  uint32_t nz_decoder_index() { return nz_decoder_index_; }
+  void nz_decoder_index(uint32_t index) { nz_decoder_index_ = index; }
+
  private:
   friend class base::RefCountedThreadSafe<AudioBuffer>;
 
@@ -210,6 +213,7 @@ class MEDIA_EXPORT AudioBuffer
   const bool end_of_stream_;
   base::TimeDelta timestamp_;
   base::TimeDelta duration_;
+  uint32_t nz_decoder_index_;
 
   // Contiguous block of channel data.
   std::unique_ptr<uint8_t, base::AlignedFreeDeleter> data_;

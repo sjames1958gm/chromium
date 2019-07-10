@@ -50,6 +50,7 @@ enum class VideoFrameResourceType {
   RGBA_PREMULTIPLIED,
   RGBA,
   STREAM_TEXTURE,
+  HOLE,
 };
 
 class MEDIA_EXPORT VideoFrameExternalResources {

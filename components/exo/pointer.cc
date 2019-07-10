@@ -499,8 +499,8 @@ void Pointer::UpdateCursor() {
     // TODO(reveman): Add interface for creating cursors from GpuMemoryBuffers
     // and use that here instead of the current bitmap API.
     // https://crbug.com/686600
-    platform_cursor = ui::CursorFactoryOzone::GetInstance()->CreateImageCursor(
-        bitmap, hotspot, 0);
+    platform_cursor = ui::CursorFactoryOzone::GetInstance()->CreateImageCursor( 
+        cursor_.native_type(), bitmap, hotspot, 0);
 #elif defined(USE_X11)
     XcursorImage* image = ui::SkBitmapToXcursorImage(&bitmap, hotspot);
     platform_cursor = ui::CreateReffedCustomXCursor(image);

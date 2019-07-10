@@ -175,6 +175,7 @@ class MEDIA_EXPORT MimeUtil {
 
   // Returns true if |codec| refers to a proprietary codec.
   bool IsCodecProprietary(Codec codec) const;
+  bool IsCodecSupportedNz(Codec codec) const;
 
   // Returns true and sets |*default_codec| if |mime_type_lower_case| has a
   // default codec associated with it. Returns false otherwise and the value of

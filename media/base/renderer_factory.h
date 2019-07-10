@@ -42,12 +42,15 @@ class MEDIA_EXPORT RendererFactory {
       AudioRendererSink* audio_renderer_sink,
       VideoRendererSink* video_renderer_sink,
       const RequestOverlayInfoCB& request_overlay_info_cb,
-      const gfx::ColorSpace& target_color_space) = 0;
+      const gfx::ColorSpace& target_color_space,
+      int streamId) = 0;
 
   // Returns the MediaResource::Type that should be used with the renderers
   // created by this factory.
   // NOTE: Returns Type::STREAM by default.
   virtual MediaResource::Type GetRequiredMediaResourceType();
+
+ protected:
 
  private:
   DISALLOW_COPY_AND_ASSIGN(RendererFactory);

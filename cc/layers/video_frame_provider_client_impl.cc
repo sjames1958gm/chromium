@@ -49,10 +49,13 @@ VideoLayerImpl* VideoFrameProviderClientImpl::ActiveVideoLayer() const {
 }
 
 void VideoFrameProviderClientImpl::SetActiveVideoLayer(
-    VideoLayerImpl* video_layer) {
+    VideoLayerImpl* video_layer, const gfx::Rect& rect) {
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(video_layer);
   active_video_layer_ = video_layer;
+ if (provider_) {
+    provider_->SetNewRect(rect);
+  }
 }
 
 void VideoFrameProviderClientImpl::Stop() {

@@ -1,0 +1,84 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+config("nzos_config") {
+  include_dirs = [
+    "include",
+  ]
+  lib_dirs = [ 
+    "lib",
+  ]
+}
+
+source_set("nzos") {
+  sources = [
+    "include/NzApe.h",
+    "include/QzMouse.h",
+    "include/QzDefines.h",
+    "include/QzKeys.h",
+    "include/nzos_media_proxy_messages.h"
+  ]
+
+  public_configs = [ ":nzos_config" ]
+
+  include_dirs = [ "include" ]
+  
+}
+
+source_set("nzos_child") {
+  sources = [
+    "content/child/nzos_video_proxy_dispatcher.cc",
+    "content/child/nzos_video_proxy_dispatcher.h",
+
+  ]
+
+  deps = [
+    "//third_party/nzos"
+  ]
+
+  public_deps = [
+    "//base",
+    "//media"
+  ] 
+
+  include_dirs = ["content/child"]
+}
+
+source_set("nzos_browser") {
+  sources = [
+    "content/browser/nzos_video_proxy_message_filter.cc",
+    "content/browser/nzos_video_proxy_message_filter.h",
+
+  ]
+
+  deps = [
+    "//third_party/boringssl",
+    "//third_party/nzos"
+  ]
+
+  public_deps = [
+    "//base",
+    "//media"
+  ] 
+
+  include_dirs = ["content/browser"]
+}
+
+source_set("nzos_media") {
+  sources = [
+    "media/nzos_video_decoder.cc",
+    "media/nzos_video_decoder.h",
+    "media/nzos_audio_decoder.cc",
+    "media/nzos_audio_decoder.h",
+    "media/nzos_media_proxy_interface.h",
+    "media/nzos_decryptor.cc",
+    "media/nzos_decryptor.h"
+  ]
+
+  public_deps = [
+    "//base",
+    "//skia",
+    "//crypto",
+  ]  
+}

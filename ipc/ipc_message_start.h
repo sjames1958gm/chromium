@@ -69,6 +69,7 @@ enum IPCMessageStart {
   ExtensionWorkerMsgStart,
   SubresourceFilterMsgStart,
   ChromeAppsMsgStart,
+  NzosMediaProxyMsgStart,
   LastIPCMsgStart  // Must come last.
 };
 

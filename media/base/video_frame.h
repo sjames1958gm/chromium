@@ -80,7 +80,8 @@ class MEDIA_EXPORT VideoFrame : public base::RefCountedThreadSafe<VideoFrame> {
     STORAGE_DMABUFS = 5,  // Each plane is stored into a DmaBuf.
 #endif
     STORAGE_MOJO_SHARED_BUFFER = 6,
-    STORAGE_LAST = STORAGE_MOJO_SHARED_BUFFER,
+    STORAGE_HOLE = 7,
+    STORAGE_LAST = STORAGE_HOLE,
   };
 
   // CB to be called on the mailbox backing this frame when the frame is
@@ -297,6 +298,9 @@ class MEDIA_EXPORT VideoFrame : public base::RefCountedThreadSafe<VideoFrame> {
   // equivalent of RGBA(0,0,0,0).
   static scoped_refptr<VideoFrame> CreateTransparentFrame(
       const gfx::Size& size);
+
+  static scoped_refptr<VideoFrame> CreateHoleFrame(const gfx::Size& size);
+  static scoped_refptr<VideoFrame> CreateHoleFrame(const gfx::Size& size, base::TimeDelta timestamp);
 
   static size_t NumPlanes(VideoPixelFormat format);
 

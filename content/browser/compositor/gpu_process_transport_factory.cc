@@ -229,6 +229,7 @@ GpuProcessTransportFactory::CreateSoftwareOutputDevice(
 #elif defined(USE_OZONE)
   ui::SurfaceFactoryOzone* factory =
       ui::OzonePlatform::GetInstance()->GetSurfaceFactoryOzone();
+  CHECK(factory);
   std::unique_ptr<ui::SurfaceOzoneCanvas> surface_ozone =
       factory->CreateCanvasForWidget(widget);
   CHECK(surface_ozone);
@@ -444,7 +445,7 @@ void GpuProcessTransportFactory::EstablishedGpuChannel(
   UMA_HISTOGRAM_BOOLEAN("Aura.CreatedGpuBrowserCompositor",
                         gpu_compositing_ready);
   if (!gpu_compositing_ready) {
-#if defined(OS_CHROMEOS)
+#if defined(OS_CHROMEOS)  && !defined(USE_OZONE)
     // A fatal context error occured, and we can not fall back to software
     // compositing on ChromeOS. These can be unrecoverable hardware errors,
     // or bugs that should not happen: either from the client's context request,

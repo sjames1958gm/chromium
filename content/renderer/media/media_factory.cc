@@ -140,14 +140,15 @@ MediaFactory::GetVideoSurfaceLayerMode() {
     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
   }
 
-  if (features::IsMultiProcessMash())
-    return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
+// NZOS - Dont support surface mode for now (for bounding rect)
+//   if (features::IsMultiProcessMash())
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
 
-  if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideo))
-    return blink::WebMediaPlayer::SurfaceLayerMode::kAlways;
+//   if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideo))
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kAlways;
 
-  if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideoPIP))
-    return blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand;
+//   if (base::FeatureList::IsEnabled(media::kUseSurfaceLayerForVideoPIP))
+//     return blink::WebMediaPlayer::SurfaceLayerMode::kOnDemand;
 
   return blink::WebMediaPlayer::SurfaceLayerMode::kNever;
 }
@@ -607,8 +608,9 @@ media::mojom::RemoterFactory* MediaFactory::GetRemoterFactory() {
 #endif
 
 media::CdmFactory* MediaFactory::GetCdmFactory() {
-  if (cdm_factory_)
+  if (cdm_factory_) {
     return cdm_factory_.get();
+  }
 
 #if BUILDFLAG(ENABLE_MOJO_CDM)
   cdm_factory_.reset(new media::MojoCdmFactory(GetMediaInterfaceFactory()));

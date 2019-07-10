@@ -147,6 +147,9 @@ void VideoFrameCompositor::SetVideoFrameProviderClient(
     client_->StopUsingProvider();
   client_ = client;
 
+  // NZOS --
+  provider_client_reset_cb_.Run(client != NULL);
+
   // |client_| may now be null, so verify before calling it.
   if (rendering_ && client_)
     client_->StartRendering();
@@ -279,9 +282,13 @@ bool VideoFrameCompositor::ProcessNewFrame(
   if (new_processed_frame_cb_)
     std::move(new_processed_frame_cb_).Run(base::TimeTicks::Now());
 
-  return true;
-}
+  if (frame_ready_cb_) {
+    frame_ready_cb_.Run(frame->timestamp());
+  }
 
+  return true;
+
+}
 void VideoFrameCompositor::BackgroundRender() {
   DCHECK(task_runner_->BelongsToCurrentThread());
   const base::TimeTicks now = tick_clock_->NowTicks();
@@ -348,6 +355,25 @@ void VideoFrameCompositor::UpdateIsOpaque(bool is_opaque) {
   DCHECK(task_runner_->BelongsToCurrentThread());
 
   submitter_->SetIsOpaque(is_opaque);
+}
+
+// NZOS -- 
+void VideoFrameCompositor::SetNewRectCB(OnNewRectCB cb_) {
+  new_rect_cb_ = std::move(cb_);
+}
+
+void VideoFrameCompositor::SetFrameReadyCB(OnFrameReadyCB cb_) {
+  frame_ready_cb_ = std::move(cb_);
+}
+
+void VideoFrameCompositor::SetProviderClientResetCB(OnProviderClientResetCB cb_) {
+  provider_client_reset_cb_ = cb_;
+}
+
+void VideoFrameCompositor::SetNewRect(const gfx::Rect& rect) {
+  if (new_rect_cb_) {
+    new_rect_cb_.Run(rect);
+  }
 }
 
 }  // namespace media

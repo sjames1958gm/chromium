@@ -601,6 +601,13 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
   // Switch to SurfaceLayer, either initially or from VideoLayer.
   void ActivateSurfaceLayerForVideo();
 
+  // NZOS - send rect changed info to nzos video decoder
+  void OnRectChanged(const gfx::Rect& rect);
+  // NZOS - send ready frame timestamp to video decoder
+  void OnFrameReady(base::TimeDelta timestamp);
+  // NZOS - hide / show video based on provider client
+  void OnProviderClientReset (bool hasClient);
+
   blink::WebLocalFrame* const frame_;
 
   // The playback state last reported to |delegate_|, to avoid setting duplicate
@@ -947,6 +954,8 @@ class MEDIA_BLINK_EXPORT WebMediaPlayerImpl
 
   // True if StartPipeline() completed a lazy load startup.
   bool did_lazy_load_ = false;
+
+  int drm_scheme_;
 
   DISALLOW_COPY_AND_ASSIGN(WebMediaPlayerImpl);
 };

@@ -29,22 +29,22 @@ scoped_refptr<BitmapCursorOzone> CreateDefaultBitmapCursor(CursorType type) {
   SkBitmap bitmap = cursor.GetBitmap();
   gfx::Point hotspot = cursor.GetHotspot();
   if (!bitmap.isNull())
-    return new BitmapCursorOzone(bitmap, hotspot);
+    return new BitmapCursorOzone(type, bitmap, hotspot);
   return NULL;
 }
 
 }  // namespace
 
-BitmapCursorOzone::BitmapCursorOzone(const SkBitmap& bitmap,
+BitmapCursorOzone::BitmapCursorOzone(CursorType type, const SkBitmap& bitmap,
                                      const gfx::Point& hotspot)
-    : hotspot_(hotspot), frame_delay_ms_(0) {
+    : hotspot_(hotspot), frame_delay_ms_(0), type_(type) {
   bitmaps_.push_back(bitmap);
 }
 
-BitmapCursorOzone::BitmapCursorOzone(const std::vector<SkBitmap>& bitmaps,
+BitmapCursorOzone::BitmapCursorOzone(CursorType type, const std::vector<SkBitmap>& bitmaps,
                                      const gfx::Point& hotspot,
                                      int frame_delay_ms)
-    : bitmaps_(bitmaps), hotspot_(hotspot), frame_delay_ms_(frame_delay_ms) {
+    : bitmaps_(bitmaps), hotspot_(hotspot), frame_delay_ms_(frame_delay_ms), type_(type) {
   DCHECK_LT(0U, bitmaps.size());
   DCHECK_LE(0, frame_delay_ms);
 }
@@ -83,22 +83,24 @@ PlatformCursor BitmapCursorFactoryOzone::GetDefaultCursor(CursorType type) {
 }
 
 PlatformCursor BitmapCursorFactoryOzone::CreateImageCursor(
+    CursorType type,
     const SkBitmap& bitmap,
     const gfx::Point& hotspot,
     float bitmap_dpi) {
-  BitmapCursorOzone* cursor = new BitmapCursorOzone(bitmap, hotspot);
+  BitmapCursorOzone* cursor = new BitmapCursorOzone(type, bitmap, hotspot);
   cursor->AddRef();  // Balanced by UnrefImageCursor.
   return ToPlatformCursor(cursor);
 }
 
 PlatformCursor BitmapCursorFactoryOzone::CreateAnimatedCursor(
+    CursorType type,
     const std::vector<SkBitmap>& bitmaps,
     const gfx::Point& hotspot,
     int frame_delay_ms,
     float bitmap_dpi) {
   DCHECK_LT(0U, bitmaps.size());
   BitmapCursorOzone* cursor =
-      new BitmapCursorOzone(bitmaps, hotspot, frame_delay_ms);
+      new BitmapCursorOzone(type, bitmaps, hotspot, frame_delay_ms);
   cursor->AddRef();  // Balanced by UnrefImageCursor.
   return ToPlatformCursor(cursor);
 }

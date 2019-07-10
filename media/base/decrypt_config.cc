@@ -34,9 +34,9 @@ const char* EncryptionModeAsString(EncryptionMode mode) {
 std::unique_ptr<DecryptConfig> DecryptConfig::CreateCencConfig(
     const std::string& key_id,
     const std::string& iv,
-    const std::vector<SubsampleEntry>& subsamples) {
+    const std::vector<SubsampleEntry>& subsamples, u_int32_t sessionId, uint32_t drmScheme) {
   return std::make_unique<DecryptConfig>(EncryptionMode::kCenc, key_id, iv,
-                                         subsamples, base::nullopt);
+                                         subsamples, base::nullopt, sessionId, drmScheme);
 }
 
 // static
@@ -55,12 +55,16 @@ DecryptConfig::DecryptConfig(
     const std::string& key_id,
     const std::string& iv,
     const std::vector<SubsampleEntry>& subsamples,
-    base::Optional<EncryptionPattern> encryption_pattern)
+    base::Optional<EncryptionPattern> encryption_pattern,
+    uint32_t session_id,
+    uint32_t drm_scheme)
     : encryption_mode_(encryption_mode),
       key_id_(key_id),
       iv_(iv),
       subsamples_(subsamples),
-      encryption_pattern_(std::move(encryption_pattern)) {
+      encryption_pattern_(std::move(encryption_pattern)),
+      session_id_(session_id),
+      drm_scheme_(drm_scheme) {
   // Unencrypted blocks should not have a DecryptConfig.
   DCHECK_NE(encryption_mode_, EncryptionMode::kUnencrypted);
   CHECK_GT(key_id_.size(), 0u);

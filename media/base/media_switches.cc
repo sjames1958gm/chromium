@@ -191,6 +191,18 @@ const char kUserGestureRequiredForCrossOriginPolicy[] =
 
 }  // namespace autoplay
 
+const char kEnableNZDecoding[] = "use-nz-decoding";
+const char kDisableNZAudioDecoding[] = "disable-nz-audio-decoding";
+const char kEnableNZDecrypting[] = "use-nz-decrypting";
+const char kDumpNzDecoding[] = "nz-decoding-dump";
+const char kEnableNZBWControl[] = "enable-nz-bw-control";
+const char kNzPermitVpCodecs[] = "nz-permit-vp-codecs";
+const char kNzAdjustRate[] = "nz-adjust-rate";
+const char kNzVideoQueueSize[] = "nz-video-queue-size";
+const char kNzAudioQueueSize[] = "nz-audio-queue-size";
+const char kNzMaxVideoQueueSize[] = "nz-max-video-queue-size";
+const char kNzMaxAudioQueueSize[] = "nz-max-audio-queue-size";
+
 }  // namespace switches
 
 namespace media {

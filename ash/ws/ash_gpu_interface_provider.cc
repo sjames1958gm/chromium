@@ -36,10 +36,10 @@ void AshGpuInterfaceProvider::RegisterGpuInterfaces(
       &AshGpuInterfaceProvider::BindGpuRequest, base::Unretained(this)));
 }
 
-void AshGpuInterfaceProvider::RegisterOzoneGpuInterfaces(
-    service_manager::BinderRegistry* registry) {
-  ui::OzonePlatform::GetInstance()->AddInterfaces(registry);
-}
+//void AshGpuInterfaceProvider::RegisterOzoneGpuInterfaces(
+//    service_manager::BinderRegistry* registry) {
+//  ui::OzonePlatform::GetInstance()->AddInterfaces(registry);
+//}
 
 void AshGpuInterfaceProvider::BindArcRequest(ws::mojom::ArcRequest request) {
   gpu_host_->AddArc(std::move(request));

@@ -214,6 +214,8 @@ jumbo_source_set("browser") {
     "//ui/snapshot",
     "//ui/touch_selection",
     "//v8:v8_version",
+    "//third_party/nzos:nzos_browser",
+    "//third_party/nzos",
   ]
 
   public_deps = [

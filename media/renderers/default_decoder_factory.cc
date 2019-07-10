@@ -39,6 +39,9 @@
 #include "media/filters/vpx_video_decoder.h"
 #endif
 
+#include "third_party/nzos/media/nzos_video_decoder.h"
+#include "third_party/nzos/media/nzos_audio_decoder.h"
+
 namespace media {
 
 DefaultDecoderFactory::DefaultDecoderFactory(
@@ -50,7 +53,17 @@ DefaultDecoderFactory::~DefaultDecoderFactory() = default;
 void DefaultDecoderFactory::CreateAudioDecoders(
     scoped_refptr<base::SingleThreadTaskRunner> task_runner,
     MediaLog* media_log,
-    std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders) {
+    std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders,
+    int streamId) {
+
+  if (NZAudioDecoder::IsEnabled() && (!nz_use_browser_decoder_)) {
+    std::unique_ptr<NZAudioDecoder> ad = std::make_unique<NZAudioDecoder>(task_runner, streamId);
+
+    ad->SetByPassData(by_pass_url_, by_pass_corr_);
+    nz_audio_decoder_id_ = ad->GetId();
+    audio_decoders->push_back(std::move(ad));
+  }
+
 #if !defined(OS_ANDROID)
   // DecryptingAudioDecoder is only needed in External Clear Key testing to
   // cover the audio decrypt-and-decode path.
@@ -77,7 +90,19 @@ void DefaultDecoderFactory::CreateVideoDecoders(
     MediaLog* media_log,
     const RequestOverlayInfoCB& request_overlay_info_cb,
     const gfx::ColorSpace& target_color_space,
-    std::vector<std::unique_ptr<VideoDecoder>>* video_decoders) {
+    std::vector<std::unique_ptr<VideoDecoder>>* video_decoders,
+    int streamId) {
+
+  if (NZVideoDecoder::IsEnabled() && (!nz_use_browser_decoder_)) {
+    
+    std::unique_ptr<NZVideoDecoder> vd = std::make_unique<NZVideoDecoder>(task_runner, streamId);
+
+    nz_video_decoder_id_ = vd->GetId();
+    vd->SetByPassData(by_pass_url_, by_pass_corr_);
+
+    video_decoders->push_back(std::move(vd));
+  } 
+  
 #if !defined(OS_ANDROID)
   video_decoders->push_back(
       std::make_unique<DecryptingVideoDecoder>(task_runner, media_log));

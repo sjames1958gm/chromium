@@ -52,6 +52,8 @@ class BLINK_PLATFORM_EXPORT WebContentDecryptionModule {
 
   virtual void GetStatusForPolicy(const WebString& min_hdcp_version,
                                   WebContentDecryptionModuleResult) = 0;
+
+  virtual void setInstanceId(uint32_t id) = 0;
 };
 
 }  // namespace blink

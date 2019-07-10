@@ -1,0 +1,62 @@
+
+import("//ui/ozone/platform/nzos/nzos.gni")
+
+visibility = [ "//ui/ozone/*" ]
+
+source_set("nzos") {
+  sources = [
+    "client_native_pixmap_factory_nzos.cc",
+    "client_native_pixmap_factory_nzos.h",
+    "nzos_channel_browser.cc",
+    "nzos_channel_browser.h",
+    "nzos_cursor_factory.cc",
+    "nzos_cursor_factory.h",
+    "nzos_display_browser.cc",
+    "nzos_display_browser.h",
+    "nzos_display_util.cc",
+    "nzos_display_util.h",
+    "nzos_event_converter.cc",
+    "nzos_event_converter.h",
+    "nzos_event_factory.cc",
+    "nzos_event_factory.h",
+    "nzos_location_provider.cc",
+    "nzos_location_provider.h",
+    "nzos_native_display_delegate.cc",
+    "nzos_native_display_delegate.h",
+    "nzos_output_change_observer.h",
+    "nzos_platform_thread.cc",
+    "nzos_platform_thread.h",
+    "nzos_platform_window.cc",
+    "nzos_platform_window.h",
+    "nzos_surface_skia.cc",
+    "nzos_surface_skia.h",
+    "nzos_widget_constants.h",
+    "nzos_window_change_observer.h",
+    "ozone_platform_nzos.cc",
+    "ozone_platform_nzos.h"
+  ]
+
+  defines = [ "OZONE_IMPLEMENTATION" ]
+
+  libs = [ "NzServer", "NzApe" ]
+
+  lib_dirs = [ "./" ]
+
+  deps = [
+    "//base",
+    "//services/device/public/cpp/geolocation",
+    "//skia",
+    "//ui/base",
+    "//ui/display/manager",
+    "//ui/events",
+    "//ui/events/ozone:events_ozone_layout",
+    "//ui/events/platform",
+    "//ui/gfx/geometry",
+    "//ui/gl",
+    "//ui/ozone:ozone_base",
+    "//ui/ozone/common",
+    "//ui/platform_window",
+    "//ui/platform_window/stub",
+    "//third_party/nzos",
+  ]
+}

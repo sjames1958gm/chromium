@@ -78,6 +78,9 @@
 #include "media/base/android/media_codec_util.h"
 #endif
 
+#include "third_party/nzos/media/nzos_video_decoder.h"
+#include "third_party/nzos/media/nzos_audio_decoder.h"
+
 using blink::WebMediaPlayer;
 using blink::WebRect;
 using blink::WebSize;
@@ -271,12 +274,18 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
       create_bridge_callback_(params->create_bridge_callback()),
       request_routing_token_cb_(params->request_routing_token_cb()),
       overlay_routing_token_(OverlayInfo::RoutingToken()),
-      media_metrics_provider_(params->take_metrics_provider()) {
+      media_metrics_provider_(params->take_metrics_provider()),
+      drm_scheme_(0)  {
   DVLOG(1) << __func__;
   DCHECK(adjust_allocated_memory_cb_);
   DCHECK(renderer_factory_selector_);
   DCHECK(client_);
   DCHECK(delegate_);
+
+  // NZOS -
+  compositor_->SetNewRectCB(base::Bind(&WebMediaPlayerImpl::OnRectChanged, AsWeakPtr()));
+  compositor_->SetFrameReadyCB(base::Bind(&WebMediaPlayerImpl::OnFrameReady, AsWeakPtr()));
+  compositor_->SetProviderClientResetCB(base::Bind(&WebMediaPlayerImpl::OnProviderClientReset, AsWeakPtr()));
 
   // If we're supposed to force video overlays, then make sure that they're
   // enabled all the time.
@@ -319,8 +328,13 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
   }
   media_log_->SetStringProperty("surface_layer_mode", surface_layer_mode_name);
 
-  if (params->initial_cdm())
+  LOG(ERROR) << "webmedia player construct " << delegate_id_;
+  LOG(ERROR) << "webmedia player construct " << frame_->GetDocument().Url().GetString().Utf8();
+
+  if (params->initial_cdm()) {
     SetCdm(params->initial_cdm());
+    params->initial_cdm()->setInstanceId(delegate_id_);
+  }
 
   // Report a false "EncrytpedEvent" here as a baseline.
   RecordEncryptedEvent(false);
@@ -685,6 +699,17 @@ void WebMediaPlayerImpl::Play() {
 
   media_log_->AddEvent(media_log_->CreateEvent(MediaLogEvent::PLAY));
   UpdatePlayState();
+
+
+  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (videoDecoder) {
+    videoDecoder->Play(GetPipelineMediaDuration().InSecondsF());
+  } else {
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      audioDecoder->Play(GetPipelineMediaDuration().InSecondsF());
+    }
+  }
 }
 
 void WebMediaPlayerImpl::Pause() {
@@ -725,6 +750,17 @@ void WebMediaPlayerImpl::Pause() {
   media_log_->AddEvent(media_log_->CreateEvent(MediaLogEvent::PAUSE));
 
   UpdatePlayState();
+
+    media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (videoDecoder) {
+    videoDecoder->Pause();
+  } else {
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      audioDecoder->Pause();
+    }
+  }
+
 }
 
 void WebMediaPlayerImpl::Seek(double seconds) {
@@ -790,6 +826,19 @@ void WebMediaPlayerImpl::DoSeek(base::TimeDelta time, bool time_updated) {
   seek_time_ = time;
   if (paused_)
     paused_time_ = time;
+
+  media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (videoDecoder) {
+    LOG(ERROR) << "Seeking: " << seek_time_.InMicroseconds();
+    videoDecoder->OnSeek(seeking_, seek_time_);
+  } else {
+    media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+    if (audioDecoder) {
+      LOG(ERROR) << "Seeking: " << seek_time_.InMicroseconds();
+      audioDecoder->OnSeek(seeking_, seek_time_);
+    }
+  }
+
   pipeline_controller_.Seek(time, time_updated);
 
   // This needs to be called after Seek() so that if a resume is triggered, it
@@ -824,6 +873,13 @@ void WebMediaPlayerImpl::SetVolume(double volume) {
   if (watch_time_reporter_)
     watch_time_reporter_->OnVolumeChange(volume);
   delegate_->DidPlayerMutedStatusChange(delegate_id_, volume == 0.0);
+
+  media::NZAudioDecoder* aDecoder =
+                  media::NZAudioDecoder::getNzDecoder(delegate_id_);
+  if (aDecoder) {
+    aDecoder->SetVolume(volume);
+  }
+
 
   // The play state is updated because the player might have left the autoplay
   // muted state.
@@ -1318,7 +1374,7 @@ void WebMediaPlayerImpl::SetContentDecryptionModule(
 
   // For now MediaCapabilities only handles clear content.
   video_decode_stats_reporter_.reset();
-
+  cdm->setInstanceId(delegate_id_);
   SetCdm(cdm);
 }
 
@@ -1391,6 +1447,15 @@ void WebMediaPlayerImpl::SetCdm(blink::WebContentDecryptionModule* cdm) {
     return;
   }
 
+  // media::NZVideoDecoder* videoDecoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  // if (videoDecoder) {
+  //   videoDecoder->SetKeySystem(drm_scheme_);
+  // } 
+  // media::NZAudioDecoder* audioDecoder = media::NZAudioDecoder::getNzDecoder(delegate_id_);
+  // if (audioDecoder) {
+  //   audioDecoder->SetKeySystem(drm_scheme_);
+  // }
+
   CdmContext* cdm_context = cdm_context_ref->GetCdmContext();
   DCHECK(cdm_context);
 
@@ -1435,6 +1500,12 @@ void WebMediaPlayerImpl::OnPipelineSeeked(bool time_updated) {
                seek_time_.InSecondsF(), "id", media_log_->id());
   seeking_ = false;
   seek_time_ = base::TimeDelta();
+
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    // TODO - correct seek time
+    decoder->OnSeek(seeking_, seek_time_);
+  }
 
   if (paused_) {
 #if defined(OS_ANDROID)  // WMPI_CAST
@@ -1692,7 +1763,6 @@ void WebMediaPlayerImpl::OnMetadata(PipelineMetadata metadata) {
       if (!always_enable_overlays_ && !DoesOverlaySupportMetadata())
         DisableOverlay();
     }
-
     if (surface_layer_mode_ ==
             blink::WebMediaPlayer::SurfaceLayerMode::kAlways ||
         (surface_layer_mode_ ==
@@ -2443,8 +2513,8 @@ void WebMediaPlayerImpl::MaybeSendOverlayInfoToDecoder() {
 std::unique_ptr<Renderer> WebMediaPlayerImpl::CreateRenderer() {
   DCHECK(main_task_runner_->BelongsToCurrentThread());
 
-  // Make sure that overlays are enabled if they're always allowed.
   if (always_enable_overlays_)
+  // Make sure that overlays are enabled if they're always allowed.
     EnableOverlay();
 
   RequestOverlayInfoCB request_overlay_info_cb;
@@ -2452,9 +2522,15 @@ std::unique_ptr<Renderer> WebMediaPlayerImpl::CreateRenderer() {
   request_overlay_info_cb = BindToCurrentLoop(
       base::Bind(&WebMediaPlayerImpl::OnOverlayInfoRequested, AsWeakPtr()));
 #endif
-  return renderer_factory_selector_->GetCurrentFactory()->CreateRenderer(
+  // NZOS -- using delegate id as stream/renderer id as it appears to 
+  //         exist for the entire life of this object and is likely unique
+  std::unique_ptr<Renderer> retvalue = renderer_factory_selector_->GetCurrentFactory()->CreateRenderer(
       media_task_runner_, worker_task_runner_, audio_source_provider_.get(),
-      compositor_.get(), request_overlay_info_cb, client_->TargetColorSpace());
+      compositor_.get(), request_overlay_info_cb, client_->TargetColorSpace(), delegate_id_);
+
+  LOG(ERROR) << "Create Renderers: " << delegate_id_;
+
+  return retvalue;
 }
 
 void WebMediaPlayerImpl::StartPipeline() {
@@ -3367,6 +3443,30 @@ void WebMediaPlayerImpl::MaybeSetContainerName() {
   media_metrics_provider_->SetContainerName(
       static_cast<FFmpegDemuxer*>(demuxer_.get())->container());
 #endif
+}
+
+void WebMediaPlayerImpl::OnRectChanged(const gfx::Rect& rect) {
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    decoder->SetBoundingRect(rect);
+  }
+}
+
+void WebMediaPlayerImpl::OnFrameReady(base::TimeDelta timestamp) {
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    decoder->FrameReady(timestamp);
+  }
+}
+
+void WebMediaPlayerImpl::OnProviderClientReset (bool hasClient) {
+  media::NZVideoDecoder* decoder = media::NZVideoDecoder::getNzDecoder(delegate_id_);
+  if (decoder) {
+    if (hasClient)
+      decoder->Show();
+    else
+      decoder->Hide();
+  }
 }
 
 }  // namespace media

@@ -50,7 +50,7 @@ class MEDIA_EXPORT DecryptConfig {
   static std::unique_ptr<DecryptConfig> CreateCencConfig(
       const std::string& key_id,
       const std::string& iv,
-      const std::vector<SubsampleEntry>& subsamples);
+      const std::vector<SubsampleEntry>& subsamples, uint32_t sessionId = 0, uint32_t drmScheme = 0);
   static std::unique_ptr<DecryptConfig> CreateCbcsConfig(
       const std::string& key_id,
       const std::string& iv,
@@ -61,7 +61,9 @@ class MEDIA_EXPORT DecryptConfig {
                 const std::string& key_id,
                 const std::string& iv,
                 const std::vector<SubsampleEntry>& subsamples,
-                base::Optional<EncryptionPattern> encryption_pattern);
+                base::Optional<EncryptionPattern> encryption_pattern,
+                uint32_t session_id = 0,
+                uint32_t drm_scheme = 0);
   ~DecryptConfig();
 
   const std::string& key_id() const { return key_id_; }
@@ -71,6 +73,8 @@ class MEDIA_EXPORT DecryptConfig {
   const base::Optional<EncryptionPattern>& encryption_pattern() const {
     return encryption_pattern_;
   };
+  uint32_t SessionId() const { return session_id_; }
+  uint32_t DrmScheme() const { return drm_scheme_; }
 
   std::unique_ptr<DecryptConfig> Clone() const;
 
@@ -98,6 +102,10 @@ class MEDIA_EXPORT DecryptConfig {
 
   // Only specified if |encryption_mode_| requires a pattern.
   base::Optional<EncryptionPattern> encryption_pattern_;
+
+  // NZOS
+  uint32_t session_id_;
+  uint32_t drm_scheme_;
 
   DISALLOW_ASSIGN(DecryptConfig);
 };

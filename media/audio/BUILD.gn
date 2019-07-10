@@ -183,6 +183,18 @@ source_set("audio") {
     "//media:subcomponent_config",
   ]
 
+  if (use_nzosaudio) {
+    sources += [
+      "nzos/nzos_audio_manager.cc",
+      "nzos/nzos_audio_manager.h",
+      "nzos/nzos_output.cc",
+      "nzos/nzos_output.h",
+    ]
+    deps += [
+      "//third_party/nzos",
+      "//ui/ozone",
+    ]
+  }
   if (is_mac) {
     sources += [
       "mac/audio_auhal_mac.cc",

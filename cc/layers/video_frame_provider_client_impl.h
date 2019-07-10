@@ -34,7 +34,7 @@ class CC_EXPORT VideoFrameProviderClientImpl
       VideoFrameControllerClient* client);
 
   VideoLayerImpl* ActiveVideoLayer() const;
-  void SetActiveVideoLayer(VideoLayerImpl* video_layer);
+  void SetActiveVideoLayer(VideoLayerImpl* video_layer, const gfx::Rect& rect);
 
   bool Stopped() const;
   // Must be called on the impl thread while the main thread is blocked.

@@ -126,6 +126,9 @@ class CONTENT_EXPORT WebMediaPlayerMSCompositor
   // preparation for dtor.
   void StopUsingProvider();
 
+  // NZOS -- needed because of change in abstract base class
+  void SetNewRect(const gfx::Rect& rect) override {}
+
  private:
   friend class base::RefCountedDeleteOnSequence<WebMediaPlayerMSCompositor>;
   friend class base::DeleteHelper<WebMediaPlayerMSCompositor>;

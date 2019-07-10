@@ -56,6 +56,8 @@ class ScopedIPCSupport;
 namespace content {
 class InProcessChildThreadParams;
 class ThreadSafeSender;
+class NzVideoProxyDispatcher;
+
 
 // The main thread of a child process derives from this class.
 class CONTENT_EXPORT ChildThreadImpl
@@ -273,6 +275,8 @@ class CONTENT_EXPORT ChildThreadImpl
 
   scoped_refptr<base::SingleThreadTaskRunner> ipc_task_runner_;
 
+  scoped_refptr<NzVideoProxyDispatcher> nz_video_proxy_dispatcher_;
+  
   base::WeakPtrFactory<ChildThreadImpl> weak_factory_;
 
   DISALLOW_COPY_AND_ASSIGN(ChildThreadImpl);

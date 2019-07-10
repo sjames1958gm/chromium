@@ -187,17 +187,20 @@ FrameCaptionButtonContainerView::FrameCaptionButtonContainerView(
       new FrameCaptionButton(this, CAPTION_BUTTON_ICON_MINIMIZE, HTMINBUTTON);
   minimize_button_->SetAccessibleName(
       l10n_util::GetStringUTF16(IDS_APP_ACCNAME_MINIMIZE));
+  minimize_button_->SetVisible(false);
   AddChildView(minimize_button_);
 
   size_button_ = new FrameSizeButton(this, this);
   size_button_->SetAccessibleName(
       l10n_util::GetStringUTF16(IDS_APP_ACCNAME_MAXIMIZE));
+  size_button_->SetVisible(false);
   AddChildView(size_button_);
 
   close_button_ =
       new FrameCaptionButton(this, CAPTION_BUTTON_ICON_CLOSE, HTCLOSE);
   close_button_->SetAccessibleName(
       l10n_util::GetStringUTF16(IDS_APP_ACCNAME_CLOSE));
+  close_button_->SetVisible(false);
   AddChildView(close_button_);
 
   UpdateCaptionButtonState(false /* animate */);

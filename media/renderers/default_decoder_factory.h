@@ -23,7 +23,8 @@ class MEDIA_EXPORT DefaultDecoderFactory : public DecoderFactory {
   void CreateAudioDecoders(
       scoped_refptr<base::SingleThreadTaskRunner> task_runner,
       MediaLog* media_log,
-      std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders) final;
+      std::vector<std::unique_ptr<AudioDecoder>>* audio_decoders,
+      int streamId) final;
 
   void CreateVideoDecoders(
       scoped_refptr<base::SingleThreadTaskRunner> task_runner,
@@ -31,7 +32,8 @@ class MEDIA_EXPORT DefaultDecoderFactory : public DecoderFactory {
       MediaLog* media_log,
       const RequestOverlayInfoCB& request_overlay_info_cb,
       const gfx::ColorSpace& target_color_space,
-      std::vector<std::unique_ptr<VideoDecoder>>* video_decoders) final;
+      std::vector<std::unique_ptr<VideoDecoder>>* video_decoders,
+      int streamId) final;
 
  private:
   std::unique_ptr<DecoderFactory> external_decoder_factory_;

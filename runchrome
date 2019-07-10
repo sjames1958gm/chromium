@@ -1,0 +1,8 @@
+export CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox 
+export GOOGLE_API_KEY='xxx' 
+export GOOGLE_DEFAULT_CLIENT_ID='xxx' 
+export GOOGLE_DEFAULT_CLIENT_SECRET='xxx'
+
+export LD_LIBRARY_PATH=lib 
+export LD_PRELOAD=lib/libNzServer.so 
+../src/out/OzoneNzos/chrome --ozone-platform=nzos --user-data=data --disk-cache-dir=cache --disable-gpu --disable-gpu-compositing --ui-disable-threaded-compositing --disable-software-rasterizer --use-nz-decoding --nz-capture-log --enable-logging --v=0 --nzparms="-port 2100 -console 0 +log +log_debug +log_file +log_app +log_ape" https://www.cnn.com

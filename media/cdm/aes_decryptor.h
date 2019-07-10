@@ -86,6 +86,7 @@ class MEDIA_EXPORT AesDecryptor : public ContentDecryptionModule,
   void DeinitializeDecoder(StreamType stream_type) override;
 
  private:
+
   // Testing classes that needs to manipulate internal states for testing.
   friend class ClearKeyPersistentSessionCdm;
   friend class ClearKeyCdmProxy;

@@ -8,6 +8,7 @@
 #include "base/memory/ref_counted.h"
 #include "base/time/time.h"
 #include "cc/cc_export.h"
+#include "ui/gfx/geometry/rect.h"
 
 namespace media {
 class VideoFrame;
@@ -92,6 +93,9 @@ class CC_EXPORT VideoFrameProvider {
   // Providers may use the absence of this call as a signal to detect when a new
   // frame missed its intended deadline.
   virtual void PutCurrentFrame() = 0;
+
+  // NZOS --
+  virtual void SetNewRect(const gfx::Rect& rect) = 0;
 
  protected:
   virtual ~VideoFrameProvider() {}

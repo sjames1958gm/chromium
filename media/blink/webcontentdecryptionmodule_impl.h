@@ -53,6 +53,8 @@ class MEDIA_BLINK_EXPORT WebContentDecryptionModuleImpl
 
   std::unique_ptr<CdmContextRef> GetCdmContextRef();
 
+  void setInstanceId(uint32_t id) override;
+
  private:
   friend CdmSessionAdapter;
 

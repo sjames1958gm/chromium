@@ -321,6 +321,7 @@ if (!is_android && !is_mac) {
       # not supported at all.
       if (is_chromeos) {
         deps += [ "//third_party/adobe/flash:flapper_binaries" ]
+        deps += [ "//third_party/nzos" ]
       }
 
       # ChromeOS by design is safe to have rpath=$ORIGIN. This simplifies shared
